@@ -8,6 +8,17 @@ export const login = async (provider: Provider, callback?: string) => {
   await signIn(provider, { redirectTo: callback || "/bookcase" });
 };
 
+export const loginNaver = async () => await login("naver");
+
+export const authorize = async (formData: FormData) => {
+  try {
+    await signIn("credentials", formData);
+  } catch (error) {
+    console.log("💻 sign.action.ts : error:", error);
+    throw error;
+  }
+};
+
 export const loggout = async () => {
-  await signOut({ redirectTo: "/" });
+  await signOut({ redirectTo: "/sign" }); //QQQ: '/'
 };

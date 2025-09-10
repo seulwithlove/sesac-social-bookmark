@@ -1,15 +1,21 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
+import { login } from "./sign.action";
 
 export function GoogleLoginButton() {
   return (
     <Button
+      onClick={() => login("google")}
       variant="outline"
-      className="h-12 w-full gap-2 rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-50">
+      className="h-12 w-full gap-2 rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
+    >
       <svg
         className="h-6 w-6"
         viewBox="0 0 48 48"
         xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true">
+        aria-hidden="true"
+      >
         <path
           fill="#EA4335"
           d="M24 9.5c3.54 0 6.68 1.22 9.17 3.6l6.83-6.83C36.23 2.53 30.54 0 24 0 14.63 0 6.4 5.48 2.56 13.44l7.91 6.14C12.11 13.12 17.57 9.5 24 9.5z"

@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useReducer } from "react";
+import z from "zod";
 import LabelInput from "@/components/label-input";
 import { Button } from "@/components/ui/button";
+import { authorize } from "./sign.action";
 
 export default function SignForm() {
-  const [isSignin, toggleSign] = useReducer((pre) => !pre, false);
+  const [isSignin, toggleSign] = useReducer((pre) => !pre, true);
   return (
     <>
       {isSignin ? (
@@ -19,13 +21,33 @@ export default function SignForm() {
 }
 
 function SignIn({ toggleSign }: { toggleSign: () => void }) {
+  const makeLogin = async (formData: FormData) => {
+    // const email = formData.get("email");
+    // const passwd = formData.get("passwd");
+
+    // const validator = z
+    //   .object({
+    //     email: z.email("잘못된 이메일 형식입니다"),
+    //     passwd: z.string().min(6, "more than 6 characters!"),
+    //   })
+    //   .safeParse(Object.fromEntries(formData.entries()));
+
+    // if (!validator.success) {
+    //   console.log("Error:", validator.error);
+    //   return alert(validator.error);
+    // }
+
+    await authorize(formData);
+  };
+
   return (
     <>
-      <form className="flex flex-col space-y-3">
+      <form action={makeLogin} className="flex flex-col space-y-3">
         <LabelInput
           label="email"
           type="email"
           name="email"
+          defaultValue={"love.and.seul@gmail.com"}
           placeholder="email@bookmark.com"
         />
 
@@ -34,6 +56,7 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
           type="password"
           name="passwd"
           placeholder="your password"
+          defaultValue={"121212"}
           className="my-3x"
         />
 
