@@ -1,7 +1,17 @@
+// "use client";
+
 import Link from "next/link";
 import SignOutButton from "@/components/signout-button";
 
 export default function My() {
+  // const {
+  //   data: { user },
+  //   update,
+  // } = useSession();
+  // const updateInfo = async (formData:FormData) => {
+  //   update(user);
+  // };
+
   return (
     <div className="grid h-full place-items-center">
       <div className="w-96 border p-5 text-center">
