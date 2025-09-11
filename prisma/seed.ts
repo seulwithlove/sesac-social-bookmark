@@ -1,20 +1,20 @@
-import { PrismaClient } from '../lib/generated/prisma/client';
+import { PrismaClient } from "../lib/generated/prisma/client";
 
 const prisma = new PrismaClient();
 const mbrs = [
   {
-    email: 'indiflex.corp@gmail.com',
-    nickname: 'indiflex',
-    image: 'https://avatars.githubusercontent.com/u/5843964?v=4',
+    email: "love.and.seul@gmail.com",
+    nickname: "love.and.seul",
+    image: "https://avatars.githubusercontent.com/u/140625136?v=4",
     Book: {
       create: [
         {
-          title: 'IndiFlex Personal Book',
+          title: "seulwithlove's Book",
           Mark: {
             create: {
-              link: 'https://naver.com',
-              title: 'Naver',
-              descript: 'seeding...',
+              link: "https://github.com",
+              title: "Github",
+              descript: "seeding...",
             },
           },
         },
@@ -22,15 +22,15 @@ const mbrs = [
     },
   },
   {
-    email: 'indiflex.sico@gmail.com',
-    nickname: '시니어코딩',
+    email: "rosily313@gmail.com",
+    nickname: "이코키",
     image:
-      'https://lh3.googleusercontent.com/a/ACg8ocIXMQz3s5gQdKrno8qArpiiJ3trUHbnVM0gTw58wMDxRa-ljySL=s96-c',
+      "https://lh3.googleusercontent.com/a/ACg8ocJWi4cfOFoNNkNIfPtRUx7tVDH2QfyEi6hc5yRHF77WLMlhu5j4=s576-c-no",
   },
   {
-    email: 'jeonseongho@naver.com',
-    nickname: 'Jade',
-    passwd: '$2b$10$zbmpxOaO4jroF9Mmrt2M8u6TWXms1/ncqJysXXOyD69aYqPaf44jG',
+    email: "anfrhrl0313@naver.com",
+    nickname: "Seul",
+    passwd: "0P0rSPp5tX",
   },
 ];
 
@@ -41,15 +41,15 @@ async function main() {
       update: {},
       create: { ...mbr },
     });
-    console.log('🚀 ~ rs:', rs);
+    console.log("🚀 ~ rs:", rs);
   }
 }
 
 main()
-  .catch(async e => {
-    console.error('PrismaError>>', e);
+  .catch(async (e) => {
+    console.error("PrismaError>>", e);
   })
   .finally(async () => {
     await prisma.$disconnect();
-    console.error('Prisma Closed!');
+    console.error("Prisma Closed!");
   });
