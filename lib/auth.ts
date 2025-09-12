@@ -48,7 +48,7 @@ export const {
       if (!email) return false;
 
       const mbr = await prisma.member.findUnique({ where: { email } });
-      console.log("💻 auth.ts ~ mbr:", mbr);
+      console.log("💻 - auth.ts - mbr:", mbr);
 
       if (isCredential) {
         if (!mbr) throw new AuthError("NotExistsMember");
@@ -63,8 +63,9 @@ export const {
       }
       return true;
     },
+
     async jwt({ token, user, trigger, account, session }) {
-      // console.log("💻 auth.ts ~ account:", account);
+      console.log("💻 auth.ts ~ account:", account);
       const userData = trigger === "update" ? session : user;
 
       // jwt 방식, GET /api/auth/callback/google에서는 없음
@@ -75,6 +76,7 @@ export const {
       }
       return token;
     },
+
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id?.toString() || "";
@@ -84,6 +86,7 @@ export const {
       return session;
     },
   },
+
   trustHost: true,
   jwt: { maxAge: 30 * 60 },
   pages: {

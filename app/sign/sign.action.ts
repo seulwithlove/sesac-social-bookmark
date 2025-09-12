@@ -14,7 +14,7 @@ export const authorize = async (formData: FormData) => {
   try {
     await signIn("credentials", formData);
   } catch (error) {
-    console.log("💻 sign.action.ts : error:", error);
+    console.log("💻 - sign.action.ts - error:", error);
     throw error;
   }
 };
