@@ -2,12 +2,10 @@
 
 import LabelInput from "@/components/label-input";
 import { Button } from "@/components/ui/button";
-import type { ValidError } from "@/lib/validator";
-import { LoaderPinwheel } from "lucide-react";
+import { LoaderPinwheelIcon } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useReducer } from "react";
-import z from "zod";
-import { authorize } from "./sign.action";
+import { authorize, regist } from "./sign.action";
 
 export default function SignForm() {
   const [isSignin, toggleSign] = useReducer((pre) => !pre, false);
@@ -23,24 +21,10 @@ export default function SignForm() {
 }
 
 function SignIn({ toggleSign }: { toggleSign: () => void }) {
-  const makeLogin = async (formData: FormData) => {
-    // const email = formData.get("email");
-    // const passwd = formData.get("passwd");
-
-    // const validator = z
-    //   .object({
-    //     email: z.email("잘못된 이메일 형식입니다"),
-    //     passwd: z.string().min(6, "more than 6 characters!"),
-    //   })
-    //   .safeParse(Object.fromEntries(formData.entries()));
-
-    // if (!validator.success) {
-    //   console.log("Error:", validator.error);
-    //   return alert(validator.error);
-    // }
-
-    await authorize(formData);
-  };
+  const [validError, makeLogin, isPending] = useActionState(
+    authorize,
+    undefined,
+  );
 
   return (
     <>
@@ -49,6 +33,7 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
           label="email"
           type="email"
           name="email"
+          error={validError}
           defaultValue={"anfrhrl0313@naver.com"}
           placeholder="email@bookmark.com"
         />
@@ -57,6 +42,7 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
           label="password"
           type="password"
           name="passwd"
+          error={validError}
           defaultValue={"121212"}
           placeholder="your password"
           className="my-3x"
@@ -72,11 +58,16 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
             Remember me
           </label>
 
-          <Link href="#">Forgot Password?</Link>
+          <Link href="/forgotpasswd">Forgot Password?</Link>
         </div>
 
-        <Button type="submit" variant={"primary"} className="w-full">
-          login
+        <Button
+          type="submit"
+          variant={"primary"}
+          className="w-full"
+          disabled={isPending}
+        >
+          {isPending ? "Singing..." : "Sign in"}
         </Button>
       </form>
       <div className="mt-5 flex gap-10">
@@ -90,28 +81,7 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
 }
 
 function SignUp({ toggleSign }: { toggleSign: () => void }) {
-  const [validError, makeRegist, isPending] = useActionState(
-    async (_preValidError: ValidError | undefined, formData: FormData) => {
-      const validator = z
-        .object({
-          email: z.email(),
-          passwd: z.string().min(6),
-          passwd2: z.string().min(6),
-          nickname: z.string().min(3),
-        })
-        .refine(
-          ({ passwd, passwd2 }) => passwd === passwd2,
-          "Passwords are not matched!",
-        )
-        .safeParse(Object.fromEntries(formData.entries()));
-
-      if (!validator.success) {
-        const err = z.treeifyError(validator.error).properties;
-        return err;
-      }
-    },
-    undefined,
-  );
+  const [validError, makeRegist, isPending] = useActionState(regist, undefined);
 
   return (
     <>
@@ -135,7 +105,7 @@ function SignUp({ toggleSign }: { toggleSign: () => void }) {
         <LabelInput
           label="password confirm"
           type="password"
-          name="passwd"
+          name="passwd2"
           error={validError}
           placeholder="your password"
           className="my-3x"
@@ -156,7 +126,7 @@ function SignUp({ toggleSign }: { toggleSign: () => void }) {
           className="w-full"
         >
           {isPending ? "Singing up..." : "Sign Up"}
-          {isPending && <LoaderPinwheel className="animate-spin" />} Sign Up
+          {isPending && <LoaderPinwheelIcon className="animate-spin" />}
         </Button>
       </form>
       <div className="mt-5 flex gap-10">
