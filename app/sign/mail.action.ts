@@ -37,7 +37,7 @@ export const sendRegistCheck = async (to: string, authKey: string) => {
 export const sendPasswordReset = async (
   to: string,
   authKey: string,
-  nickname?: string
+  nickname?: string,
 ) => {
   const subject = "[Bookmark] Reset Password";
   const html = `
@@ -58,12 +58,12 @@ const sendMail = async (
   to: string,
   subject: string,
   html: string,
-  attachments?: Attachments
+  attachments?: Attachments,
 ) => {
   TRANS.sendMail({
     from: FROM,
     to,
-    bcc: "love.and.seul@gmail.com",
+    bcc: "rosily313@gmail.com",
     subject,
     html,
     attachments,
