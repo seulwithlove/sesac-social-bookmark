@@ -24,6 +24,7 @@ export default function SignForm() {
 function SignIn({ toggleSign }: { toggleSign: () => void }) {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
+  const redirectTo = searchParams.get("redirectTo");
 
   const passwdRef = useRef<HTMLInputElement>(null);
 
@@ -31,6 +32,11 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
     authorize,
     undefined,
   );
+
+  const makeLoginAction = (formData: FormData) => {
+    if (redirectTo) formData.set("redirectTo", redirectTo);
+    makeLogin(formData);
+  };
 
   useEffect(() => {
     if (email) {
@@ -41,6 +47,9 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
   return (
     <>
       <form action={makeLogin} className="flex flex-col space-y-3">
+        {redirectTo && (
+          <input type="hidden" name="redirectTo" value={redirectTo} />
+        )}
         <LabelInput
           label="email"
           type="email"

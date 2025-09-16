@@ -9,13 +9,14 @@ import { redirect } from "next/navigation";
 import z from "zod";
 import { sendRegistCheck } from "./mail.action";
 
-type Provider = "google" | "github" | "naver" | "kakao";
+export type Provider = "google" | "github" | "naver" | "kakao";
 
-export const login = async (provider: Provider, callback?: string) => {
+export const login = async (provider: Provider, callback?: string | null) => {
   await signIn(provider, { redirectTo: callback || "/bookcase" });
 };
 
-export const loginNaver = async () => await login("naver");
+export const loginNaver = async (redirectTo?: string | null) =>
+  await login("naver", redirectTo);
 
 export const authorize = async (
   _preValidError: ValidError | undefined,
@@ -29,8 +30,11 @@ export const authorize = async (
   if (err) return err;
 
   try {
+    const redirectTo = formData.get("redirectTo")?.toString() || "/bookcase";
+    console.log("💻 - sign.action.ts - redirectTo:", redirectTo);
+
     // await signIn("credentials", formData);
-    await signIn("credentials", { ...data, redirectTo: "/bookcase" });
+    await signIn("credentials", { ...data, redirectTo });
   } catch (error) {
     console.log("💻 - sign.action.authorize - error:", error);
     throw error;
