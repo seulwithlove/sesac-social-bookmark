@@ -4,11 +4,12 @@ import LabelInput from "@/components/label-input";
 import { Button } from "@/components/ui/button";
 import { LoaderPinwheelIcon } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useReducer } from "react";
+import { useSearchParams } from "next/navigation";
+import { useActionState, useEffect, useReducer, useRef } from "react";
 import { authorize, regist } from "./sign.action";
 
 export default function SignForm() {
-  const [isSignin, toggleSign] = useReducer((pre) => !pre, false);
+  const [isSignin, toggleSign] = useReducer((pre) => !pre, true);
   return (
     <>
       {isSignin ? (
@@ -21,10 +22,21 @@ export default function SignForm() {
 }
 
 function SignIn({ toggleSign }: { toggleSign: () => void }) {
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email");
+
+  const passwdRef = useRef<HTMLInputElement>(null);
+
   const [validError, makeLogin, isPending] = useActionState(
     authorize,
     undefined,
   );
+
+  useEffect(() => {
+    if (email) {
+      passwdRef.current?.focus();
+    }
+  }, [email]);
 
   return (
     <>
@@ -33,8 +45,9 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
           label="email"
           type="email"
           name="email"
+          focus={true}
           error={validError}
-          defaultValue={"anfrhrl0313@naver.com"}
+          defaultValue={email || ""}
           placeholder="email@bookmark.com"
         />
 
@@ -42,8 +55,9 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
           label="password"
           type="password"
           name="passwd"
+          ref={passwdRef}
           error={validError}
-          defaultValue={"121212"}
+          // defaultValue={"121212"}
           placeholder="your password"
           className="my-3x"
         />
@@ -80,6 +94,14 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
   );
 }
 
+// const dummy = {
+//   email: "lee.seeul.00@gmail.com",
+//   // email: "rosily313@gmail.com",
+//   passwd: "121212",
+//   passwd2: "121212",
+//   nickname: "seul",
+// };
+
 function SignUp({ toggleSign }: { toggleSign: () => void }) {
   const [validError, makeRegist, isPending] = useActionState(regist, undefined);
 
@@ -92,13 +114,24 @@ function SignUp({ toggleSign }: { toggleSign: () => void }) {
           name="email"
           focus={true}
           error={validError}
+          // defaultValue={dummy.email}
           placeholder="email@bookmark.com"
+        />
+        <LabelInput
+          label="nickname"
+          type="nickname"
+          name="nickname"
+          error={validError}
+          // defaultValue={dummy.nickname}
+          placeholder="your nickname"
+          className="my-3x"
         />
         <LabelInput
           label="password"
           type="password"
           name="passwd"
           error={validError}
+          // defaultValue={dummy.passwd}
           placeholder="your password"
           className="my-3x"
         />
@@ -107,15 +140,8 @@ function SignUp({ toggleSign }: { toggleSign: () => void }) {
           type="password"
           name="passwd2"
           error={validError}
+          // defaultValue={dummy.passwd2}
           placeholder="your password"
-          className="my-3x"
-        />
-        <LabelInput
-          label="nickname"
-          type="nickname"
-          name="nickname"
-          error={validError}
-          placeholder="your nickname"
           className="my-3x"
         />
 

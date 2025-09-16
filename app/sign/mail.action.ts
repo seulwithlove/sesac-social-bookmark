@@ -47,7 +47,7 @@ export const sendPasswordReset = async (
       <h3 style="margin: 10px 0;">
         Click the link below to reset your password.
       </h3>
-      <a href="${process.env.NEXT_PUBLIC_URL}/passwdcheck/${authKey}">Reset Password</a>
+      <a href="${process.env.NEXT_PUBLIC_URL}/forgotpasswd/${authKey}">Reset Password</a>
     </div>
   `;
 

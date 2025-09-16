@@ -1,3 +1,4 @@
+import { findMemberByEmail } from "@/app/sign/sign.action";
 import NextAuth, { AuthError, type User } from "next-auth";
 import Credential from "next-auth/providers/credentials";
 import Github from "next-auth/providers/github";
@@ -24,7 +25,7 @@ export const {
         passwd: {},
       },
       async authorize(credentials) {
-        console.log("credentials>>", credentials);
+        // console.log("credentials>>", credentials);
         const { email, passwd } = credentials;
         const validator = z
           .object({
@@ -47,8 +48,11 @@ export const {
       const { email, name: nickname, image } = user;
       if (!email) return false;
 
-      const mbr = await prisma.member.findUnique({ where: { email } });
+      const mbr = await findMemberByEmail(email, isCredential);
       console.log("💻 - auth.ts - mbr:", mbr);
+      if (mbr?.emailcheck) {
+        return `/sign/error?error=CheckEmail&email=${email}`;
+      }
 
       if (isCredential) {
         if (!mbr) throw new AuthError("NotExistsMember");

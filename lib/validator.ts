@@ -6,7 +6,7 @@ export type ValidError = Record<
 >;
 
 // export type ValidError = {
-//   success: false; // type
+//   success: false; // type 판별자
 //   error: Record<
 //     string,
 //     { errors: string[]; value?: FormDataEntryValue | null }
@@ -16,7 +16,7 @@ export type ValidError = Record<
 export const validate = <T extends z.ZodObject>(
   zobj: T,
   formData: FormData,
-): [ValidError | undefined, z.core.output<T>?] => {
+): [ValidError] | [undefined, z.core.output<T>] => {
   const ent = Object.fromEntries(formData.entries());
   const validator = zobj.safeParse(ent);
 
