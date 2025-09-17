@@ -18,6 +18,7 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
+// TODO: remove nodejs runtime!!
 export const config = {
   runtime: "nodejs",
   matcher: [

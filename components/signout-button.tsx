@@ -6,7 +6,6 @@ import { Button } from "./ui/button";
 
 export default function SignOutButton() {
   const session = useSession();
-  // if (!session?.data?.user) redirect("/sign");
 
   return (
     <Button onClick={loggout} variant={"success"}>

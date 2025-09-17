@@ -5,6 +5,7 @@ import prisma from "@/lib/db";
 import { newToken } from "@/lib/utils";
 import { validate, type ValidError } from "@/lib/validator";
 import { hash } from "bcryptjs";
+import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import z from "zod";
 import { sendRegistCheck } from "./mail.action";
@@ -37,6 +38,29 @@ export const authorize = async (
     await signIn("credentials", { ...data, redirectTo });
   } catch (error) {
     console.log("💻 - sign.action.authorize - error:", error);
+    if (error instanceof AuthError) {
+      let typeErr: string;
+      switch (error.type) {
+        case "AccessDenied":
+        case "EmailSignInError":
+          typeErr = error.message.split(". Read more")[0];
+          break;
+        case "OAuthAccountNotLinked":
+          typeErr = `Already registed SNS Account`;
+          break;
+        case "CredentialsSignin":
+          typeErr =
+            error.message.split(". Read more")[0] ||
+            "Not match Email or Password!";
+          break;
+        default:
+          typeErr = error.message || "Something went wrong!";
+      }
+      return {
+        email: { errors: [typeErr], value: data.email },
+        passwd: { errors: [], value: data.passwd },
+      };
+    }
     throw error;
   }
 };
@@ -93,6 +117,7 @@ export const findMemberByEmail = async (
       nickname: true,
       isadmin: true,
       emailcheck: true,
+      outdt: true,
       passwd,
     }, // email은 아래 써서 추가안해도됨
     where: { email },
