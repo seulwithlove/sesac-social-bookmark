@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Book {
+  id         Int          @id @default(autoincrement()) @db.UnsignedInt
+  createdAt  DateTime     @default(now()) @db.Timestamp(0)
+  updatedAt  DateTime     @default(now()) @updatedAt @db.Timestamp(0)
+  member     Int          @db.UnsignedInt
+  title      String       @db.VarChar(25)
+  withdel    Boolean      @default(false)
+  ispublic   Boolean      @default(false)
+  remark     String?      @db.VarChar(512)
+  Member     Member       @relation(fields: [member], references: [id], onDelete: Cascade, map: "fk_Book_member")
+  FollowBook FollowBook[]
+  Mark       Mark[]
+
+  @@index([member], map: "fk_Book_member")
+}
+
+model FollowBook {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  createdAt DateTime @default(now()) @db.Timestamp(0)
+  book      Int      @db.UnsignedInt
+  member    Int?     @db.UnsignedInt
+  Book      Book     @relation(fields: [book], references: [id], onDelete: Cascade, map: "fk_FollowBook_book")
+  Member    Member?  @relation(fields: [member], references: [id], map: "fk_FollowBook_member")
+
+  @@index([book], map: "fk_FollowBook_book")
+  @@index([member], map: "fk_FollowBook_member")
+}
+
+model Likes {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  createdAt DateTime @default(now()) @db.Timestamp(0)
+  mark      Int      @db.UnsignedInt
+  member    Int?     @db.UnsignedInt
+  Mark      Mark     @relation(fields: [mark], references: [id], onDelete: Cascade, map: "fk_Likes_mark")
+  Member    Member?  @relation(fields: [member], references: [id], map: "fk_Likes_member")
+
+  @@index([mark], map: "fk_Likes_mark")
+  @@index([member], map: "fk_Likes_member")
+}
+
+model Mark {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  createdAt DateTime @default(now()) @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @db.Timestamp(0)
+  book      Int      @db.UnsignedInt
+  title     String   @db.VarChar(15)
+  link      String   @db.VarChar(512)
+  image     String?  @db.VarChar(255)
+  maker     Int?     @db.UnsignedInt
+  descript  String?  @db.VarChar(512)
+  Likes     Likes[]
+  Book      Book     @relation(fields: [book], references: [id], onDelete: Cascade, map: "fk_Mark_book")
+  Member    Member?  @relation(fields: [maker], references: [id], map: "fk_Mark_maker_Member")
+  Report    Report[]
+  Talk      Talk[]
+
+  @@index([book], map: "fk_Mark_book")
+  @@index([maker], map: "fk_Mark_maker_Member")
+}
+
+model Member {
+  id         Int          @id @default(autoincrement()) @db.UnsignedInt
+  createdAt  DateTime     @default(now()) @db.Timestamp(0)
+  updatedAt  DateTime     @default(now()) @db.Timestamp(0)
+  nickname   String       @db.VarChar(21)
+  email      String       @unique(map: "uniq_Member_email") @db.VarChar(128)
+  passwd     String?      @db.VarChar(255)
+  image      String?      @db.VarChar(255)
+  isadmin    Boolean      @default(false)
+  emailcheck String?      @db.VarChar(256)
+  outdt      String?      @db.VarChar(10)
+  descript   String?      @db.VarChar(512)
+  Book       Book[]
+  FollowBook FollowBook[]
+  Likes      Likes[]
+  Mark       Mark[]
+  Report     Report[]
+  Talk       Talk[]
+}
+
+model Report {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  createdAt DateTime @default(now()) @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @db.Timestamp(0)
+  mark      Int      @db.UnsignedInt
+  member    Int      @db.UnsignedInt
+  Mark      Mark     @relation(fields: [mark], references: [id], onDelete: Cascade, map: "fk_Report_mark")
+  Member    Member   @relation(fields: [member], references: [id], onDelete: Cascade, map: "fk_Report_member")
+
+  @@index([mark], map: "fk_Report_mark")
+  @@index([member], map: "fk_Report_member")
+}
+
+model Talk {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  createdAt DateTime @default(now()) @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @db.Timestamp(0)
+  mark      Int      @db.UnsignedInt
+  member    Int?     @db.UnsignedInt
+  msg       String   @db.VarChar(511)
+  Mark      Mark     @relation(fields: [mark], references: [id], onDelete: Cascade, map: "fk_Talk_mark")
+  Member    Member?  @relation(fields: [member], references: [id], map: "fk_Talk_member")
+
+  @@index([mark], map: "fk_Talk_mark")
+  @@index([member], map: "fk_Talk_member")
+}
