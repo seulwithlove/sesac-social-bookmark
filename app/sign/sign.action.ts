@@ -8,7 +8,7 @@ import { hash } from "bcryptjs";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import z from "zod";
-import { sendRegistCheck } from "./mail.action";
+import type { SendMailBody } from "../api/sendmail/route";
 
 export type Provider = "google" | "github" | "naver" | "kakao";
 
@@ -19,6 +19,7 @@ export const login = async (provider: Provider, callback?: string | null) => {
 export const loginNaver = async (redirectTo?: string | null) =>
   await login("naver", redirectTo);
 
+// credential login (email, passwd)
 export const authorize = async (
   _preValidError: ValidError | undefined,
   formData: FormData,
@@ -59,7 +60,7 @@ export const authorize = async (
       return {
         email: { errors: [typeErr], value: data.email },
         passwd: { errors: [], value: data.passwd },
-      };
+      } as ValidError;
     }
     throw error;
   }
@@ -102,9 +103,89 @@ export const regist = async (
     data: { email, nickname, passwd, emailcheck },
   });
 
-  await sendRegistCheck(email, emailcheck);
+  // await sendRegistCheck(email, emailcheck);
+  // fetch
+  sendmailByFetch({ email, emailcheck });
 
   redirect(`/sign/error?error=CheckEmail&email=${email}`);
+};
+
+export const sendResetPassword = async (
+  _: ValidError | undefined,
+  formData: FormData,
+) => {
+  const zobj = z.object({
+    email: z.email(),
+  });
+  const [err, data] = validate(zobj, formData);
+  if (err) return err;
+
+  const emailcheck = newToken();
+  const { email } = data;
+  const { nickname } = await prisma.member.update({
+    select: { nickname: true },
+    where: { email },
+    data: { emailcheck },
+  });
+
+  const rs = await sendmailByFetch({
+    email,
+    emailcheck,
+    nickname,
+    emailType: "reset-password",
+  });
+
+  if (!rs.ok) return { email: { errors: ["Fail to send email!"] } };
+
+  redirect(`/sign/error?error=CheckEmail&email=${email}`);
+};
+
+export const resendRegist = async (
+  _: ValidError | undefined,
+  formData: FormData,
+) => {
+  const zobj = z.object({
+    email: z.email(),
+    emailcheck: z.uuidv4(),
+  });
+  const [err, data] = validate(zobj, formData);
+  if (err) return err;
+
+  const { email, emailcheck } = data;
+  const mbr = await findMemberByEmail(email);
+  if (!mbr || mbr.emailcheck !== emailcheck) {
+    redirect("/sign/error?error=EmailSendFail");
+  }
+
+  const newEmailCheck = newToken();
+  await prisma.member.update({
+    where: { email },
+    data: { emailcheck: newEmailCheck },
+  });
+
+  const rs = await sendmailByFetch({
+    email,
+    emailcheck: newEmailCheck,
+  });
+  if (!rs.ok) return { email: { errors: ["Fail to send email"] } };
+
+  redirect(`/sign/error?error=CheckEmail&email=${email}`);
+};
+
+const sendmailByFetch = async ({
+  email,
+  emailcheck,
+  nickname,
+  emailType = "regist",
+}: SendMailBody) => {
+  const { NEXT_PUBLIC_URL, INTERNAL_SECRET } = process.env;
+  return fetch(`${NEXT_PUBLIC_URL}/api/sendmail`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${INTERNAL_SECRET}`,
+    },
+    body: JSON.stringify({ email, emailcheck, nickname, emailType }),
+  });
 };
 
 export const findMemberByEmail = async (

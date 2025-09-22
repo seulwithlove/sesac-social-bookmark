@@ -1,11 +1,16 @@
+"use client";
+
 import LabelInput from "@/components/label-input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useActionState } from "react";
+import { sendResetPassword } from "../sign/sign.action";
 
 export default function ForgotPasswd() {
-  const sendResetPassword = async () => {
-    "use server";
-  };
+  const [validError, sendmail, isPending] = useActionState(
+    sendResetPassword,
+    undefined,
+  );
 
   return (
     <div className="grid h-full place-items-center">
@@ -16,16 +21,22 @@ export default function ForgotPasswd() {
           reset password.
         </div>
 
-        <form action={sendResetPassword} className="">
+        <form action={sendmail} className="">
           <LabelInput
             label="email"
             name="email"
             type="email"
             placeholder="email@bookmark.com"
             focus={true}
+            error={validError}
           />
 
-          <Button type="submit" variant={"success"} className="my-5 w-full">
+          <Button
+            type="submit"
+            variant={"success"}
+            className="my-5 w-full"
+            disabled={isPending}
+          >
             Send Instructions Email
           </Button>
         </form>
