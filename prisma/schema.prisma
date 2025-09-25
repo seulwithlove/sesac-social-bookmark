@@ -52,7 +52,7 @@ model Likes {
 model Mark {
   id        Int      @id @default(autoincrement()) @db.UnsignedInt
   createdAt DateTime @default(now()) @db.Timestamp(0)
-  updatedAt DateTime @default(now()) @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp(0)
   book      Int      @db.UnsignedInt
   title     String   @db.VarChar(15)
   link      String   @db.VarChar(512)
@@ -72,7 +72,7 @@ model Mark {
 model Member {
   id         Int          @id @default(autoincrement()) @db.UnsignedInt
   createdAt  DateTime     @default(now()) @db.Timestamp(0)
-  updatedAt  DateTime     @default(now()) @db.Timestamp(0)
+  updatedAt  DateTime     @default(now()) @updatedAt @db.Timestamp(0)
   nickname   String       @db.VarChar(21)
   email      String       @unique(map: "uniq_Member_email") @db.VarChar(128)
   passwd     String?      @db.VarChar(255)
@@ -92,7 +92,7 @@ model Member {
 model Report {
   id        Int      @id @default(autoincrement()) @db.UnsignedInt
   createdAt DateTime @default(now()) @db.Timestamp(0)
-  updatedAt DateTime @default(now()) @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp(0)
   mark      Int      @db.UnsignedInt
   member    Int      @db.UnsignedInt
   Mark      Mark     @relation(fields: [mark], references: [id], onDelete: Cascade, map: "fk_Report_mark")
@@ -105,7 +105,7 @@ model Report {
 model Talk {
   id        Int      @id @default(autoincrement()) @db.UnsignedInt
   createdAt DateTime @default(now()) @db.Timestamp(0)
-  updatedAt DateTime @default(now()) @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp(0)
   mark      Int      @db.UnsignedInt
   member    Int?     @db.UnsignedInt
   msg       String   @db.VarChar(511)
