@@ -18,10 +18,7 @@ type Props = {
   name?: string;
   ref?: RefObject<HTMLInputElement | null>;
   focus?: boolean;
-  defaultValue?: string | number;
   error?: ValidError;
-  placeholder?: string;
-  className?: string;
   inputClassName?: string;
 };
 
@@ -37,7 +34,7 @@ export default function LabelInput({
   className,
   inputClassName,
   ...props
-}: Props & ComponentProps<"input">) {
+}: ComponentProps<"input"> & Props) {
   const uniqName = useId();
   const inpRef = useRef<HTMLInputElement>(null);
 
@@ -49,7 +46,7 @@ export default function LabelInput({
     if (!focus && !err.length) return;
 
     const keys = Object.keys(error ?? {});
-    console.log("*********", keys); // check how many times rendered
+    // console.log("*********", keys); // check how many times rendered
 
     if (!focus && (!err.length || keys[0] !== name)) return;
 
@@ -66,7 +63,7 @@ export default function LabelInput({
           id={uniqName}
           name={name || uniqName}
           ref={ref || inpRef}
-          defaultValue={val || defaultValue}
+          defaultValue={val || defaultValue || ""}
           placeholder={placeholder || ""}
           className={cn("bg-gray font-normal focus:bg-white", inputClassName)}
           {...props}

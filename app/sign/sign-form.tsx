@@ -4,7 +4,7 @@ import LabelInput from "@/components/label-input";
 import { Button } from "@/components/ui/button";
 import { LoaderPinwheelIcon } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useActionState, useEffect, useReducer, useRef } from "react";
 import { authorize, regist } from "./sign.action";
 
@@ -21,40 +21,66 @@ export default function SignForm() {
   );
 }
 
+// Remember me
+const storeEmail = (email: string | null) =>
+  email === null
+    ? localStorage.removeItem("SBM_LOCAL_EMAIL")
+    : localStorage.setItem("SBM_LOCAL_EMAIL", email);
+
+const readEmail = () => localStorage.getItem("SBM_LOCAL_EMAIL");
+
 function SignIn({ toggleSign }: { toggleSign: () => void }) {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
   const redirectTo = searchParams.get("redirectTo");
 
+  const emailRef = useRef<HTMLInputElement>(null);
   const passwdRef = useRef<HTMLInputElement>(null);
+  const rememberRef = useRef<HTMLInputElement>(null);
+
+  const router = useRouter();
 
   const [validError, makeLogin, isPending] = useActionState(
     authorize,
     undefined,
   );
 
-  const makeLoginAction = (formData: FormData) => {
-    if (redirectTo) formData.set("redirectTo", redirectTo);
-    makeLogin(formData);
+  const makeLoginAction = async (formData: FormData) => {
+    rememberMe();
+
+    if (redirectTo) formData.set("redirectTo", redirectTo); // 노출하면 안되는 것
+    await makeLogin(formData); // await 필수!
+    router.refresh(); // act like refreshing whole page
+  };
+
+  const rememberMe = () => {
+    if (rememberRef.current?.checked && emailRef.current?.value)
+      storeEmail(emailRef.current.value);
+    else storeEmail(null);
   };
 
   useEffect(() => {
-    if (email) {
+    const storedEmail = readEmail();
+    if (rememberRef.current) rememberRef.current.checked = !!storedEmail;
+    if (emailRef.current && storedEmail) emailRef.current.value = storedEmail;
+
+    if (email || storedEmail) {
       passwdRef.current?.focus();
     }
   }, [email]);
 
   return (
     <>
-      <form action={makeLogin} className="flex flex-col space-y-3">
-        {redirectTo && (
+      <form action={makeLoginAction} className="flex flex-col space-y-3">
+        {/* {redirectTo && (
           <input type="hidden" name="redirectTo" value={redirectTo} />
-        )}
+        )} */}
         <LabelInput
           label="email"
           type="email"
           name="email"
           focus={true}
+          ref={emailRef}
           error={validError}
           defaultValue={email || ""}
           placeholder="email@bookmark.com"
@@ -76,6 +102,8 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
             <input
               type="checkbox"
               id="remember"
+              ref={rememberRef}
+              onChange={rememberMe}
               className="mr-1 translate-y-[1px]"
             />
             Remember me

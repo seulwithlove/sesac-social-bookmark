@@ -46,7 +46,7 @@ export const {
       const { email, name: nickname, image } = user;
       if (!email) return false;
 
-      const mbr = await findMemberByEmail(email, isCredential);
+      let mbr = await findMemberByEmail(email, isCredential);
       console.log("💻 - auth.ts - mbr:", mbr);
       if (mbr?.emailcheck) {
         // TODO: Resend email check!
@@ -67,12 +67,18 @@ export const {
           throw authError("Invalid Password!", "CredentialsSignin");
       } else {
         // sns login
-        if (!mbr && nickname) {
-          await prisma.member.create({
-            data: { email, nickname, image },
+        if (!mbr) {
+          mbr = await prisma.member.create({
+            data: { email, nickname: nickname || "guest", image },
           });
         }
       }
+
+      user.id = String(mbr.id);
+      user.name = mbr.nickname;
+      if (mbr.image) user.image = mbr.image;
+      user.isadmin = mbr.isadmin;
+
       return true;
     },
 
@@ -88,13 +94,12 @@ export const {
         token.image = userData.image;
         token.isadmin = userData.isadmin;
 
-        if (account) {
-          token.accessToken = account?.access_token;
-          console.log();
-          token.accessTokenExpires =
-            Date.now() + (account.expires_in ?? 0) * 1000; // 서버에 요청할때마다 새로 요청
-          token.refreshToken = account.refresh_token;
-        }
+        // if (account) {
+        //   token.accessToken = account?.id_token;
+        //   token.accessTokenExpires =
+        //     Date.now() + (account.expires_in ?? 0) * 1000; // 서버에 요청할때마다 새로 요청
+        //   token.refreshToken = account.refresh_token;
+        // }
       }
 
       return token; // sns login일때
