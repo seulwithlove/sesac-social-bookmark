@@ -1,4 +1,3 @@
-import { findMemberByEmail } from "@/app/sign/sign.action";
 import { compare } from "bcryptjs";
 import NextAuth, { AuthError } from "next-auth";
 import Credential from "next-auth/providers/credentials";
@@ -7,7 +6,7 @@ import Google from "next-auth/providers/google";
 import Kakao from "next-auth/providers/kakao";
 import Naver from "next-auth/providers/naver";
 import z from "zod";
-import prisma from "./db";
+import prisma, { findMemberByEmail } from "./db";
 import { validateObject } from "./validator";
 
 export const {
@@ -41,7 +40,7 @@ export const {
     }),
   ],
   callbacks: {
-    async signIn({ user, profile, account }) {
+    async signIn({ user, account }) {
       const isCredential = account?.provider === "credentials";
       const { email, name: nickname, image } = user;
       if (!email) return false;
@@ -49,7 +48,6 @@ export const {
       let mbr = await findMemberByEmail(email, isCredential);
       console.log("💻 - auth.ts - mbr:", mbr);
       if (mbr?.emailcheck) {
-        // TODO: Resend email check!
         return `/sign/error?error=CheckEmail&email=${email}&emailcheck=${mbr.emailcheck}`;
       }
 

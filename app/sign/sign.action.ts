@@ -1,7 +1,7 @@
 "use server";
 
 import { auth, signIn, signOut } from "@/lib/auth";
-import prisma from "@/lib/db";
+import prisma, { findMemberByEmail } from "@/lib/db";
 import { newToken, uniqId } from "@/lib/utils";
 import { validate, type ValidError } from "@/lib/validator";
 import { hash } from "bcryptjs";
@@ -21,7 +21,7 @@ export const login = async (provider: Provider, callback?: string | null) => {
 };
 
 export const loginNaver = async (redirectTo?: string | null) =>
-  await login("naver", redirectTo);
+  login("naver", redirectTo);
 
 // credential login (email, passwd)
 export const authorize = async (
@@ -30,37 +30,37 @@ export const authorize = async (
 ) => {
   const zobj = z.object({
     email: z.email(),
-    passwd: z.string().min(6, "more than 6 characters!"),
+    passwd: z.string().min(6, "More than 6 characters!"),
   });
   const [err, data] = validate(zobj, formData);
   if (err) return err;
 
   try {
     const redirectTo = formData.get("redirectTo")?.toString() || "/bookcase";
-    console.log("💻 - sign.action.ts - redirectTo:", redirectTo);
-
-    // await signIn("credentials", formData);
+    console.log("🚀 ~ redirectTo:", redirectTo);
+    // await signIn('credentials', formData);
     await signIn("credentials", { ...data, redirectTo });
   } catch (error) {
-    console.log("💻 - sign.action.authorize - error:", error);
+    console.log("🚀 sign.action.authorize - error:", error);
     if (error instanceof AuthError) {
       let typeErr: string;
       switch (error.type) {
         case "AccessDenied":
         case "EmailSignInError":
-          typeErr = error.message.split(". Read more")[0];
+          typeErr = error.message.split("Read more")[0];
           break;
         case "OAuthAccountNotLinked":
           typeErr = `Already registed SNS Account`;
           break;
         case "CredentialsSignin":
           typeErr =
-            error.message.split(". Read more")[0] ||
+            error.message.split("Read more")[0] ||
             "Not match Email or Password!";
           break;
         default:
           typeErr = error.message || "Something went wrong!";
       }
+
       return {
         email: { errors: [typeErr], value: data.email },
         passwd: { errors: [], value: data.passwd },
@@ -70,8 +70,8 @@ export const authorize = async (
   }
 };
 
-export const loggout = async () => {
-  await signOut({ redirectTo: "/sign" }); //QQQ: '/'
+export const logout = async () => {
+  await signOut({ redirectTo: "/sign" }); // QQQ: '/'
 };
 
 export const regist = async (
@@ -89,16 +89,15 @@ export const regist = async (
       path: ["passwd2"],
       message: "Passwords are not matched!",
     });
-  // const x = formData.get('email') // check value type
+
   const [err, data] = validate(zobj, formData);
   if (err) return err;
 
   const { email, nickname, passwd: orgPasswd } = data;
   const mbr = await findMemberByEmail(email);
-
   if (mbr)
     return {
-      email: { errors: ["Duplicated Email Address"], value: email },
+      email: { errors: ["Duplicated Email Address!"], value: email },
     };
 
   const passwd = await hash(orgPasswd, 10);
@@ -107,7 +106,6 @@ export const regist = async (
     data: { email, nickname, passwd, emailcheck },
   });
 
-  // await sendRegistCheck(email, emailcheck);
   // fetch
   sendmailByFetch({ email, emailcheck });
 
@@ -157,11 +155,10 @@ export const resetPassword = async (
     })
     .refine(({ passwd, passwd2 }) => passwd === passwd2, {
       path: ["passwd2"],
-      message: "Not Match Password! Confirm Password!",
+      message: "Not Match Passoword and Password confirm!",
     });
 
   const [err, data] = validate(zobj, formData);
-
   if (err) return err;
 
   const { email, passwd2, emailcheck } = data;
@@ -171,7 +168,7 @@ export const resetPassword = async (
     data: { passwd, emailcheck: null },
   });
 
-  redirect(`/sign/error?error=Your Password changed.`);
+  redirect(`/sign/error?error=Your password changed.`);
 };
 
 export const resendRegist = async (
@@ -201,12 +198,12 @@ export const resendRegist = async (
     email,
     emailcheck: newEmailCheck,
   });
-  if (!rs.ok) return { email: { errors: ["Fail to send email"] } };
+  if (!rs.ok) return { email: { errors: ["Fail to send email!"] } };
 
   redirect(`/sign/error?error=CheckEmail&email=${email}`);
 };
 
-export const sendmailByFetch = async ({
+const sendmailByFetch = async ({
   email,
   emailcheck,
   nickname,
@@ -222,36 +219,17 @@ export const sendmailByFetch = async ({
   });
 };
 
-export const findMemberByEmail = async (
-  email: string,
-  passwd: boolean = false,
-) =>
-  prisma.member.findUnique({
-    select: {
-      id: true,
-      nickname: true,
-      isadmin: true,
-      emailcheck: true,
-      image: true,
-      outdt: true,
-      passwd,
-    }, // email은 아래 써서 추가안해도됨
-    where: { email },
-  });
+export type UpdateProfileImageTypeReturn = ReturnType<
+  typeof updateProfileImage
+>;
 
 export const updateProfileImage = async (formData: FormData) => {
   const session = await auth();
-  if (!session?.user || !session.user.email) {
-    return [
-      { general: { errors: ["로그인이 필요합니다."], value: null } },
-      null,
-    ];
-  }
+  if (!session?.user || !session.user.email) throw new Error("Need Login!");
 
   const { id, email } = session.user;
   const ent = Object.fromEntries(formData.entries());
-  console.log("💻 - sign.action.ts - ent:", ent);
-
+  console.log("🚀 ~ ent:", ent);
   const zobj = z.object({
     image: z
       .instanceof(File)
@@ -260,36 +238,26 @@ export const updateProfileImage = async (formData: FormData) => {
   });
 
   const [err, data] = validate(zobj, formData);
-  if (err) return [err, null];
+  // console.log('🚀 ~ err:', err);
+  // console.log('🚀 ~ data:', data);
+  if (err) return [err];
 
-  try {
-    const uploadDir = path.join(process.cwd(), "public", "profiles"); // root directory + path
-    if (!existsSync(uploadDir)) mkdirSync(uploadDir);
+  const uploadDir = path.join(process.cwd(), "public", "profiles");
+  if (!existsSync(uploadDir)) mkdirSync(uploadDir);
 
-    const fileName = `${id}_${uniqId()}_${data.image.name}`;
-    const filePath = path.join(uploadDir, fileName);
+  const fileName = `${id}_${uniqId()}_${data.image.name}`;
+  const filePath = path.join(uploadDir, fileName);
 
-    const buffer = Buffer.from(await data.image.arrayBuffer());
-    await writeFile(filePath, buffer);
-    const image = `/profiles/${fileName}`;
+  const buffer = Buffer.from(await data.image.arrayBuffer());
+  await writeFile(filePath, buffer);
+  const image = `/profiles/${fileName}`;
 
-    const mbr = await prisma.member.update({
-      where: { email },
-      data: { image },
-    });
+  const mbr = await prisma.member.update({
+    where: { email },
+    data: { image },
+  });
 
-    revalidatePath("/profiles");
-    return [null, mbr];
-  } catch (error) {
-    console.error("이미지 업로드 에러:", error);
-    return [
-      {
-        general: {
-          errors: ["이미지 업로드 중 오류가 발생했습니다."],
-          value: null,
-        },
-      },
-      null,
-    ];
-  }
+  revalidatePath("/profiles");
+
+  return [null, mbr]; // ValidError, mbr
 };
