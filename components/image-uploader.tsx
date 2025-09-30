@@ -1,10 +1,10 @@
 "use client";
 
-import type prisma from "@/lib/db";
+import type { UpdateProfileImageTypeReturn } from "@/app/sign/sign.action";
 import { cn } from "@/lib/utils";
-import type { ValidError } from "@/lib/validator";
 import { useSession } from "next-auth/react";
 import Image, { type StaticImageData } from "next/image";
+import { useRouter } from "next/navigation";
 import {
   type ChangeEvent,
   type FormEvent,
@@ -16,36 +16,30 @@ import {
 type Props = {
   src: string | StaticImageData;
   alt?: string;
-  changeImage?: (
-    formData: FormData,
-  ) => Promise<[ValidError, typeof prisma.member]>;
+  changeImage?: (formData: FormData) => UpdateProfileImageTypeReturn;
 };
 
 export default function ImageUploader({ src, alt, changeImage }: Props) {
   const { update } = useSession();
+  const router = useRouter();
 
   const [isDragging, setDragging] = useState(false);
   const [img, setImg] = useState(src);
   const formRef = useRef<HTMLFormElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [errorMsgs, setErrorMsgs] = useState<string[]>([]);
 
   const setImageFile = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
-    setPreview(e.target.files[0]);
+    setPreview(e.target.files[0], true);
   };
 
-  const setPreview = (file: File) => {
+  const setPreview = (file: File, needSubmit = false) => {
     const reader = new FileReader();
     reader.onload = (e) => {
+      // console.log('🚀 ~ e:', e.target?.result);
       if (e.target) setImg(e.target.result as string);
-
-      // set dragged img file to input
-      if (fileRef.current) {
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        fileRef.current.files = dataTransfer.files;
-      }
-      formRef.current?.requestSubmit();
+      if (needSubmit) formRef.current?.requestSubmit();
     };
     reader.readAsDataURL(file);
   };
@@ -54,38 +48,37 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
 
   const submitHandler = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    startTransition(async () => {
-      const formData = new FormData(e.currentTarget);
+    const formData = new FormData(e.currentTarget);
 
-      // 디버깅을 위한 로그
-      console.log("💻 FormData image:", formData.get("image"));
+    uploadImage(formData);
+  };
+
+  const uploadImage = (formData: FormData) => {
+    setErrorMsgs([]);
+    startTransition(async () => {
+      // const ent = Object.fromEntries(formData.entries());
+      // console.log("💻 - image-uploader.tsx - ent:", ent);
 
       if (!changeImage) return;
-
-      const [error, mbr] = await changeImage(formData);
-      console.log("💻 - image-uploader.tsx - mbr:", mbr);
-      console.log("💻 - image-uploader.tsx - error:", error);
-
-      if (error) {
-        // ValidError 객체를 읽기 쉬운 메시지로 변환
-        const errorMessages = Object.values(error)
-          .flatMap((field) => field.errors)
-          .join("\n");
-        return alert(errorMessages || "업로드 중 오류가 발생했습니다.");
+      const [err, mbr] = await changeImage(formData);
+      if (err) {
+        // return console.log("Error>>", err);
+        setImg(src);
+        if (typeof err.image === "object" && err.image?.errors.length)
+          setErrorMsgs(err.image.errors);
+        return;
       }
-
-      if (mbr) {
-        await update(mbr);
-      }
+      await update(mbr);
+      router.refresh(); // 이미지가 같이 바뀌어야하기때문에 : 꼭 필요할때만 사용!
     });
   };
 
   return (
     <form onSubmit={submitHandler} ref={formRef} className="w-full">
-      {/** biome-ignore lint/a11y/noStaticElementInteractions: file attatch */}
+      {/** biome-ignore lint/a11y/noStaticElementInteractions: file attach */}
       <div
         onDragOver={(e) => {
-          e.preventDefault(); // file drag&drop -> 파일 전체화면으로 출력되는 현상 방지
+          e.preventDefault();
           setDragging(true);
         }}
         onDragLeave={(e) => {
@@ -97,9 +90,13 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
           setDragging(false);
           const files = e.dataTransfer.files;
           if (files?.length) setPreview(files[0]);
+
+          const formData = new FormData();
+          formData.append("image", files[0]);
+          uploadImage(formData);
         }}
         className={cn(
-          "relative aspect-square w-full cursor-pointer rounded-full border-2 shadow-md",
+          "relative aspect-square w-full cursor-pointer rounded-full border-2 shadow-sm",
           { "border-blue-500 border-dotted": isDragging },
         )}
       >
@@ -109,6 +106,7 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
           onClick={() => fileRef.current?.click()}
           className="rounded-full border"
           fill
+          unoptimized={process.env.NODE_ENV === "development"}
         />
 
         <input
@@ -120,6 +118,13 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
           disabled={isPending}
           hidden
         />
+      </div>
+      <div>
+        {errorMsgs.map((emsg) => (
+          <p key={emsg} className="text-red-500">
+            {emsg}
+          </p>
+        ))}
       </div>
     </form>
   );
