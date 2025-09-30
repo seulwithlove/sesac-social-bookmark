@@ -1,5 +1,4 @@
-import { findMemberByEmail } from "@/app/sign/sign.action";
-import prisma from "@/lib/db";
+import prisma, { findMemberByEmail } from "@/lib/db";
 import { redirect } from "next/navigation";
 
 type Props = {

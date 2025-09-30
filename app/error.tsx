@@ -12,8 +12,6 @@ export default function ErrorPage({
 }) {
   const router = useRouter();
 
-  // useEffect(() => {}, [error]);
-
   return (
     <div>
       <h2 className="text-2xl">Something went wrong!</h2>

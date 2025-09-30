@@ -3,10 +3,8 @@ import { auth } from "./lib/auth";
 
 export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
-  console.log("💻 - middleware.ts - pathname:", pathname);
 
   const session = await auth(); // check if logged in
-  console.log("💻 - middleware.ts - session:", session);
 
   const didLogin = !!session?.user?.email;
   if (!didLogin) {
@@ -18,7 +16,6 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-// TODO: remove nodejs runtime!!
 export const config = {
   // runtime: "nodejs",
   matcher: [

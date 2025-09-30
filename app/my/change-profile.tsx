@@ -24,6 +24,7 @@ export default function ChangeProfile({ user }: Props) {
         focus={true}
         defaultValue={user.name || ""}
       />
+
       <div className="mb-7 flex items-end gap-2">
         <LabelInput
           label="email"
@@ -39,29 +40,27 @@ export default function ChangeProfile({ user }: Props) {
         label="Current Password"
         name="curr_passwd"
         type="password"
-        placeholder="current password ..."
+        placeholder="current password..."
       />
       <LabelInput
         label="New Password"
         name="passwd"
         type="password"
-        placeholder="new password ..."
+        placeholder="new password..."
       />
       <LabelInput
-        label="Current Password"
+        label="New Password Confirm"
         name="passwd2"
         type="password"
         placeholder="new password confirm..."
       />
 
-      <div className="flex justify-center gap-3">
+      <div className="flex justify-center gap-5">
         <Button type="reset" variant={"outline"}>
-          <UndoDotIcon />
-          Cancel
+          <UndoDotIcon /> Cancel
         </Button>
         <Button type="submit" variant={"primary"}>
-          <CheckLineIcon />
-          Save
+          <CheckLineIcon /> Save
         </Button>
       </div>
     </form>

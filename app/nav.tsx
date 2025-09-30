@@ -16,12 +16,15 @@ export default function Nav() {
       </Link>
       <ThemeChanger />
       {didLogin ? (
-        <Link href="/my" className="overflow-hidden rounded-full">
+        <Link
+          href="/my"
+          className="relative h-[40px] w-[40px] overflow-hidden rounded-full"
+        >
           <Image
-            src={session.user.image || DummyProfile}
+            src={session.user.image || DummyProfile} // DummyProfile: import해서 사용하기떄문에 나옴
             alt={session.user?.name || "guest"}
-            width={40}
-            height={40}
+            unoptimized={process.env.NODE_ENV === "development"} // next가 찾는걸 방지
+            fill
           />
         </Link>
       ) : (

@@ -1,4 +1,3 @@
-import { compare } from "bcryptjs";
 import NextAuth, { AuthError } from "next-auth";
 import Credential from "next-auth/providers/credentials";
 import Github from "next-auth/providers/github";
@@ -7,6 +6,7 @@ import Kakao from "next-auth/providers/kakao";
 import Naver from "next-auth/providers/naver";
 import z from "zod";
 import prisma, { findMemberByEmail } from "./db";
+import { comparePassword } from "./utils";
 import { validateObject } from "./validator";
 
 export const {
@@ -60,7 +60,10 @@ export const {
         if (!mbr.passwd)
           throw authError("RegistedBySNS", "OAuthAccountNotLinked");
 
-        const isValidPasswd = await compare(user.passwd ?? "", mbr.passwd);
+        const isValidPasswd = await comparePassword(
+          user.passwd ?? "",
+          mbr.passwd,
+        );
         if (!isValidPasswd)
           throw authError("Invalid Password!", "CredentialsSignin");
       } else {
@@ -81,7 +84,6 @@ export const {
     },
 
     async jwt({ token, user, trigger, account, session }) {
-      console.log("💻 auth.ts ~ account:", account);
       const userData = trigger === "update" ? session : user;
 
       // jwt 방식, GET /api/auth/callback/google에서는 없음
@@ -111,6 +113,7 @@ export const {
         session.user.image = token.image as string;
         session.user.isadmin = token.isadmin;
       }
+
       return session;
     },
   },
