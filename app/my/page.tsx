@@ -2,7 +2,7 @@ import ImageUploader from "@/components/image-uploader";
 import SignOutButton from "@/components/signout-button";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
-import DummyProfile from "@/public/profile-dummy.png";
+import { DummyProfile } from "@/lib/utils";
 import { BadgeXIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 import { use } from "react";

@@ -1,6 +1,7 @@
 import ThemeChanger from "@/components/theme-changer";
 import { auth } from "@/lib/auth";
-import DummyProfile from "@/public/profile-dummy.png";
+import { DummyProfile } from "@/lib/utils";
+import { existsFile } from "@/lib/validator";
 import { SquareLibraryIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,7 +22,7 @@ export default function Nav() {
           className="relative h-[40px] w-[40px] overflow-hidden rounded-full"
         >
           <Image
-            src={session.user.image || DummyProfile} // DummyProfile: import해서 사용하기떄문에 나옴
+            src={existsFile(session.user?.image) || DummyProfile} // DummyProfile: import해서 사용하기때문에 나옴
             alt={session.user?.name || "guest"}
             unoptimized={process.env.NODE_ENV === "development"} // next가 찾는걸 방지
             fill
