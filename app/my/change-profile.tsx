@@ -13,7 +13,9 @@ type Props = {
   } & User;
 };
 export default function ChangeProfile({ user }: Props) {
-  const { update } = useSession({ required: true });
+  // 토큰 체크하는 시간필요 : 'revalidate refresh' 옵션 있다면 사용가능
+  // const { update } = useSession({ required: true });
+  const { update } = useSession();
   const [diffEmail, setDiffEmail] = useState(false);
 
   return (
