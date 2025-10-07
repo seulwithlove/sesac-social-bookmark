@@ -6,8 +6,7 @@ import Kakao from "next-auth/providers/kakao";
 import Naver from "next-auth/providers/naver";
 import z from "zod";
 import prisma, { findMemberByEmail } from "./db";
-import { comparePassword } from "./utils";
-import { validateObject } from "./validator";
+import { comparePassword, validateObject } from "./validator";
 
 export const {
   handlers: { GET, POST },
