@@ -12,7 +12,7 @@ import {
 } from "react";
 import { Input } from "./ui/input";
 
-type Props = {
+export type LabelInputProps = {
   label: string;
   type?: string;
   name?: string;
@@ -34,7 +34,7 @@ export default function LabelInput({
   className,
   inputClassName,
   ...props
-}: ComponentProps<"input"> & Props) {
+}: ComponentProps<"input"> & LabelInputProps) {
   const uniqName = useId();
   const inpRef = useRef<HTMLInputElement>(null);
 
