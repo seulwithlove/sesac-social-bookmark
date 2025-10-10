@@ -1,14 +1,15 @@
 "use client";
 
+import LabelEditor from "@/components/label-editor";
 import LabelInput from "@/components/label-input";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import type { ValidError } from "@/lib/validator";
 import { CheckLineIcon, UndoDotIcon } from "lucide-react";
 import type { User } from "next-auth";
 import { useSession } from "next-auth/react";
-import { useActionState, useReducer, useState } from "react";
-import { sendEmailChangeCode } from "../sign/sign.action";
+import { useRouter } from "next/navigation";
+import { useReducer } from "react";
+import { updateNickname } from "../sign/sign.action";
+import EmailChanger from "./email-changer";
 
 type Props = {
   user: {
@@ -16,63 +17,40 @@ type Props = {
   } & User;
 };
 export default function ChangeProfile({ user }: Props) {
-  // 토큰 체크하는 시간필요 : 'revalidate refresh' 옵션 있다면 사용가능
   // const { update } = useSession({ required: true });
   const { update } = useSession();
-  const [diffEmail, setDiffEmail] = useState(false);
-  const [didSendCode, toggleSendCode] = useReducer((pre) => !pre, true); // QQQ: false
+  const router = useRouter(); // 자동으로 현재 페이지 refresh하기 위함
+  const [isEditingEmail, toggleEditingEmail] = useReducer((pre) => !pre, true); // QQQ: false
 
-  const [emailError, sendEmailCode, isEmailPending] = useActionState(
-    async (_: ValidError | undefined, formData: FormData) => {
-      const err = await sendEmailChangeCode(formData);
-      if (err) return err;
-      toggleSendCode();
-    },
-    undefined,
-  );
+  const changeNickname = async (formData: FormData) => {
+    const ent = Object.fromEntries(formData.entries());
+    console.log("💻 - change-profile.tsx - ent:", ent);
+    const [err, mbr] = await updateNickname(formData);
+    if (err) return err;
+    console.log("💻 - change-profile.tsx - mbr:", mbr);
+    await update(mbr);
+    router.refresh(); // auth의 cookie값 refresh
+  };
+
   return (
-    <form className="space-y-3 text-left">
-      <LabelInput
+    <div className="space-y-3 text-left">
+      <LabelEditor
         label="nickname"
         name="nickname"
         defaultValue={user.name || ""}
+        saveAction={changeNickname}
       />
 
-      <div className={cn({ "mb-7": !didSendCode }, "flex items-end gap-2")}>
-        <LabelInput
-          label="email"
-          name="newEmail"
-          defaultValue={user.email || ""}
-          onChange={(e) => setDiffEmail(e.target.value !== user.email)}
-          className="w-full"
-          error={emailError}
-        />
-        {diffEmail && (
-          <Button
-            formAction={sendEmailCode}
-            variant={"success"}
-            disabled={isEmailPending}
-          >
-            {didSendCode ? "Resend " : "Send "}Verify Code
-          </Button>
-        )}
-      </div>
-      {didSendCode && (
-        <div className="mb-7 flex items-end gap-3">
-          <LabelInput
-            label="Email Change Code"
-            type="text"
-            name="emailChangeCode"
-            placeholder="write the code ..."
-          />
-          <Button
-            formAction={sendEmailCode}
-            variant={"success"}
-            disabled={isEmailPending}
-          >
-            Confirm Code
-          </Button>
-        </div>
+      {isEditingEmail ? (
+        <EmailChanger email={user.email} toggleEditing={toggleEditingEmail} />
+      ) : (
+        <Button
+          onClick={toggleEditingEmail}
+          variant={"success"}
+          className="mt-3"
+        >
+          Change {user.email}
+        </Button>
       )}
 
       <LabelInput
@@ -102,6 +80,6 @@ export default function ChangeProfile({ user }: Props) {
           <CheckLineIcon /> Save
         </Button>
       </div>
-    </form>
+    </div>
   );
 }
