@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button";
 import { CheckLineIcon, UndoDotIcon } from "lucide-react";
 import type { User } from "next-auth";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useReducer } from "react";
+import { updateNickname } from "../sign/sign.action";
+import LabelEditor from "@/components/label-editor";
+import EmailChanger from "./email-changer";
 
 type Props = {
   user: {
@@ -39,9 +43,6 @@ export default function ChangeProfile({ user }: Props) {
   // 토큰 체크하는 시간필요 : 'revalidate refresh' 옵션 있다면 사용가능
   // const { update } = useSession({ required: true });
   const { update } = useSession();
-<<<<<<< Updated upstream
-  const [diffEmail, setDiffEmail] = useState(false);
-=======
   const router = useRouter(); //페이지 새로고침 (Session 반영)
   const [isEditingEmail, toggleEditingEmail] = useReducer((pre) => !pre, true); // QQQ: false
 
@@ -60,27 +61,27 @@ export default function ChangeProfile({ user }: Props) {
     await update(mbr);
     router.refresh(); // auth의 cookie값 refresh
   };
->>>>>>> Stashed changes
 
   return (
-    <form className="space-y-3 text-left">
-      <LabelInput
+    <div className="space-y-3 text-left">
+      <LabelEditor
         label="nickname"
         name="nickname"
-        focus={true}
         defaultValue={user.name || ""}
+        saveAction={changeNickname}
       />
 
-      <div className="mb-7 flex items-end gap-2">
-        <LabelInput
-          label="email"
-          name="email"
-          defaultValue={user.email || ""}
-          onChange={(e) => setDiffEmail(e.target.value !== user.email)}
-          className="w-full"
-        />
-        {diffEmail && <Button variant={"success"}>Send Verify Code</Button>}
-      </div>
+      {isEditingEmail ? (
+        <EmailChanger email={user.email} toggleEditing={toggleEditingEmail} />
+      ) : (
+        <Button
+          onClick={toggleEditingEmail}
+          variant={"success"}
+          className="mt-3"
+        >
+          Change {user.email}
+        </Button>
+      )}
 
       <LabelInput
         label="Current Password"
@@ -109,6 +110,6 @@ export default function ChangeProfile({ user }: Props) {
           <CheckLineIcon /> Save
         </Button>
       </div>
-    </form>
+    </div>
   );
 }

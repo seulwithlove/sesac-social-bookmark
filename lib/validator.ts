@@ -2,6 +2,7 @@ import { compare } from "bcryptjs";
 import { existsSync } from "fs";
 import path from "path";
 import z from "zod";
+import { findMemberByEmail } from "./db";
 
 export type ValidError = Record<
   string,
@@ -43,6 +44,14 @@ export const validateObject = <T extends z.ZodObject>(
   } else {
     return [undefined, validator.data];
   }
+};
+
+export const existsEmail = async (email: string, prop: string = "email") => {
+  const mbr = await findMemberByEmail(email);
+  if (mbr)
+    return {
+      [prop]: { errors: ["Duplicated Email Address!"], value: email },
+    };
 };
 
 export const comparePassword = (p1: string | undefined, p2: string) =>

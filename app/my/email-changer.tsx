@@ -16,7 +16,8 @@ import {
   useTransition,
 } from "react";
 import { flushSync } from "react-dom";
-import { sendEmailChangeCode, updateEmail } from "../sign/sign.action";
+import { sendEmailChangeCode } from "../sign/mail.action";
+import { updateEmail } from "../sign/sign.action";
 
 type Props = {
   email: string | null | undefined;
@@ -70,7 +71,7 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
    * - "confirm": updateEmail() → 인증 코드 확인 후 이메일 변경
    */
   const submitHandler = (e: FormEvent<HTMLFormElement>) => {
-    console.log("email changer : ##############", submitType);
+    console.log("##############", submitType);
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     console.log("*", Object.fromEntries(formData.entries()));
@@ -121,43 +122,45 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
         "rounded-md border-2 border-green-300 p-2",
       )}
     >
-      <form onSubmit={submitHandler} ref={formRef} className="space-y-3">
-        <div className="flex items-end gap-2">
-          <LabelInput
-            label="email"
-            name="newEmail"
-            defaultValue={email || ""}
-            focus={true}
-            onChange={(e) => setDiffEmail(e.target.value !== email)}
-            className="w-full"
-            error={validError}
-          />
-          {diffEmail && (
-            <Button onClick={sendmail} variant={"success"} disabled={isSending}>
-              {didSendCode ? "Resend" : "Send"} Verify Code
-            </Button>
-          )}
-        </div>
-
-        {didSendCode && (
-          <div className="flex items-end gap-3">
-            <LabelInput
-              label="Email change code (until 2 min)"
-              type="text"
-              name="emailChangeCode"
-              error={validError}
-              placeholder="input code..."
-            />
-            <Button
-              onClick={confirmAndSave}
-              variant={"primary"}
-              disabled={isSending}
-            >
-              Confirm Code & Save
-            </Button>
-          </div>
+      <form
+        onSubmit={submitHandler}
+        ref={formRef}
+        className="flex items-end gap-2"
+      >
+        <LabelInput
+          label="email"
+          name="newEmail"
+          defaultValue={email || ""}
+          focus={true}
+          onChange={(e) => setDiffEmail(e.target.value !== email)}
+          className="w-full"
+          error={validError}
+        />
+        {diffEmail && (
+          <Button onClick={sendmail} variant={"success"} disabled={isSending}>
+            {didSendCode ? "Resend" : "Send"} Verify Code
+          </Button>
         )}
       </form>
+
+      {didSendCode && (
+        <div className="flex items-end gap-3">
+          <LabelInput
+            label="Email change code (until 2 min)"
+            type="text"
+            name="emailChangeCode"
+            error={validError}
+            placeholder="input code..."
+          />
+          <Button
+            onClick={confirmAndSave}
+            variant={"primary"}
+            disabled={isSending}
+          >
+            Confirm Code & Save
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

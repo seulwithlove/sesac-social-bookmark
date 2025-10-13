@@ -2,8 +2,13 @@
 
 import { auth, signIn, signOut } from "@/lib/auth";
 import prisma, { findMemberByEmail } from "@/lib/db";
-import { newToken, uniqId } from "@/lib/utils";
-import { validate, type ValidError } from "@/lib/validator";
+import { newToken, uniqId, uniqNumId } from "@/lib/utils";
+import {
+  comparePassword,
+  existsEmail,
+  validate,
+  type ValidError,
+} from "@/lib/validator";
 import { hash } from "bcryptjs";
 import { existsSync, mkdirSync } from "fs";
 import { writeFile } from "fs/promises";
@@ -313,12 +318,10 @@ const sendmailByFetch = async ({
   });
 };
 
-export type UpdateProfileImageTypeReturn = ReturnType<
-  typeof updateProfileImage
->;
+export const sendEmailChangeCode_일괄저장 = async (formData: FormData) => {
+  const session = await auth();
+  if (!session?.user || !session.user.email) throw new Error("Need Login!");
 
-<<<<<<< Updated upstream
-=======
   const { email } = session.user;
   const mbr = await findMemberByEmail(email);
 
@@ -413,7 +416,6 @@ export type UpdateProfileImageTypeReturn = ReturnType<
  * @returns [ValidError | null, Member | null]
  */
 export type UpdateProfileImageReturn = ReturnType<typeof updateProfileImage>;
->>>>>>> Stashed changes
 export const updateProfileImage = async (formData: FormData) => {
   // 1. Session 확인
   const session = await auth();
@@ -421,13 +423,9 @@ export const updateProfileImage = async (formData: FormData) => {
 
   const { id, email } = session.user;
   const ent = Object.fromEntries(formData.entries());
-<<<<<<< Updated upstream
-  console.log("🚀 ~ ent:", ent);
-=======
   console.log("💻 - sign.action.ts - ent:", ent);
 
   // 2. 이미지 파일 유효성 검사
->>>>>>> Stashed changes
   const zobj = z.object({
     image: z
       .instanceof(File)
@@ -460,9 +458,6 @@ export const updateProfileImage = async (formData: FormData) => {
   // 5. 캐시 무효화
   revalidatePath("/profiles");
 
-<<<<<<< Updated upstream
-  return [null, mbr]; // ValidError, mbr
-=======
   return [null, mbr];
 };
 
@@ -497,62 +492,6 @@ export const updateNickname = async (formData: FormData) => {
     data: { nickname },
   });
   return [err, mbr] as const;
-};
-
-/**
- * 📌 sendEmailChangeCode - 이메일 변경 인증 코드 발송
- *
- * Flow:
- * 1. Session 확인
- * 2. formData에서 newEmail 추출 및 유효성 검사
- * 3. 새 이메일 중복 확인 (existsEmail)
- * 4. 5자리 숫자 인증 코드 생성 (uniqNumId)
- * 5. DB에 emailcheck 업데이트 (기존 이메일 기준)
- * 6. 2분 후 emailcheck 자동 삭제 (setTimeout)
- * 7. 새 이메일로 인증 코드 발송
- *
- * @param formData - newEmail
- * @returns ValidError | undefined
- */
-export const sendEmailChangeCode = async (formData: FormData) => {
-  const session = await auth();
-  if (!session?.user || !session.user.email) throw new Error("Need Login!");
-
-  const { email, name } = session.user;
-  const mbr = await findMemberByEmail(email);
-
-  const zobj = z.object({
-    newEmail: z.email(),
-  });
-  const [err, data] = validate(zobj, formData);
-  if (err) return err;
-
-  const { newEmail } = data;
-  const existsErr = await existsEmail(newEmail, "newEmail");
-  if (existsErr) return existsErr;
-
-  const emailcheck = uniqNumId();
-  await prisma.member.update({
-    where: { email },
-    data: { emailcheck },
-  });
-
-  setTimeout(
-    async () => {
-      await prisma.member.update({
-        where: { email },
-        data: { emailcheck: null },
-      });
-    },
-    2 * 60 * 1000,
-  );
-
-  await sendmailByFetch({
-    email: newEmail,
-    emailcheck,
-    nickname: name || "",
-    emailType: "email-change-code",
-  });
 };
 
 /**
@@ -612,5 +551,4 @@ export const updateEmail = async (formData: FormData) => {
   });
   console.log("🚀 ~ newMbr:", newMbr);
   return [null, newMbr] as const;
->>>>>>> Stashed changes
 };

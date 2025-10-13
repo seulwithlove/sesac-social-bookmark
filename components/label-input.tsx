@@ -12,9 +12,8 @@ import {
 } from "react";
 import { Input } from "./ui/input";
 
-type Props = {
+export type LabelInputProps = {
   label: string;
-  type?: string;
   name?: string;
   ref?: RefObject<HTMLInputElement | null>;
   focus?: boolean;
@@ -34,10 +33,9 @@ export default function LabelInput({
   className,
   inputClassName,
   ...props
-}: ComponentProps<"input"> & Props) {
+}: ComponentProps<"input"> & LabelInputProps) {
   const uniqName = useId();
   const inpRef = useRef<HTMLInputElement>(null);
-
   const err = !!error && !!name && error[name] ? error[name].errors : [];
   const val =
     !!error && !!name && error[name] ? error[name].value?.toString() : "";
@@ -46,8 +44,6 @@ export default function LabelInput({
     if (!focus && !err.length) return;
 
     const keys = Object.keys(error ?? {});
-    // console.log("*********", keys); // check how many times rendered
-
     if (!focus && (!err.length || keys[0] !== name)) return;
 
     if (ref) ref.current?.focus();
@@ -65,7 +61,10 @@ export default function LabelInput({
           ref={ref || inpRef}
           defaultValue={val || defaultValue || ""}
           placeholder={placeholder || ""}
-          className={cn("bg-gray font-normal focus:bg-white", inputClassName)}
+          className={cn(
+            "bg-gray-100 font-normal focus:bg-white",
+            inputClassName,
+          )}
           {...props}
         />
         {err.map((e) => (
