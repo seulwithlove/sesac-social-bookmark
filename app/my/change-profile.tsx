@@ -1,17 +1,15 @@
 "use client";
 
 import LabelEditor from "@/components/label-editor";
-import LabelInput from "@/components/label-input";
 import { Button } from "@/components/ui/button";
-import type { ValidError } from "@/lib/validator";
-import { CheckLineIcon, UndoDotIcon } from "lucide-react";
+import { PencilIcon } from "lucide-react";
 import type { User } from "next-auth";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useReducer, useState } from "react";
-import { toast } from "sonner";
-import { updateNickname, updatePassword } from "../sign/sign.action";
+import { useReducer } from "react";
+import { updateNickname } from "../sign/sign.action";
 import EmailChanger from "./email-changer";
+import PasswordChanger from "./password-changer";
 
 type Props = {
   user: {
@@ -51,9 +49,11 @@ export default function ChangeProfile({ user }: Props) {
   // const { update } = useSession({ required: true });
   const { update } = useSession();
   const router = useRouter(); //페이지 새로고침 (Session 반영)
-  const [isEditingEmail, toggleEditingEmail] = useReducer((pre) => !pre, true); // QQQ: false
-  const [validError, setValidError] = useState<ValidError | null>(null);
-  const [isPending, setIsPending] = useState(false);
+  const [isEditingEmail, toggleEditingEmail] = useReducer((pre) => !pre, false);
+  const [isEditingPassword, toggleEditingPassword] = useReducer(
+    (pre) => !pre,
+    true,
+  ); // QQQ: false
 
   /**
    * 닉네임 변경 핸들러
@@ -64,40 +64,17 @@ export default function ChangeProfile({ user }: Props) {
    * 3. router.refresh()로 auth cookie 반영
    */
   const changeNickname = async (formData: FormData) => {
+    const ent = Object.fromEntries(formData.entries());
+    console.log("💻 - change-profile.tsx - ent:", ent);
+
     const [err, mbr] = await updateNickname(formData);
     if (err) return err;
     await update(mbr);
     router.refresh(); // auth의 cookie값 refresh
   };
 
-  /**
-   * 비밀번호 변경 폼 제출 핸들러
-   */
-  const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    // 폼 요소를 미리 저장 (비동기 작업 후 e.currentTarget이 null이 되는 것 방지)
-    const form = e.currentTarget;
-
-    setIsPending(true);
-    setValidError(null);
-
-    const formData = new FormData(form);
-    const result = await updatePassword(formData);
-
-    setIsPending(false);
-
-    if (!result) {
-      toast.success("Password changed successfully!");
-      form.reset(); // 폼 초기화
-    } else {
-      setValidError(result);
-      toast.error("Failed to change password");
-    }
-  };
-
   return (
-    <div className="space-y-6 text-left">
+    <div className="space-y-3 text-left">
       <LabelEditor
         label="nickname"
         name="nickname"
@@ -105,52 +82,33 @@ export default function ChangeProfile({ user }: Props) {
         saveAction={changeNickname}
       />
 
-      {isEditingEmail ? (
-        <EmailChanger email={user.email} toggleEditing={toggleEditingEmail} />
-      ) : (
-        <Button
-          onClick={toggleEditingEmail}
-          variant={"success"}
-          className="mt-3"
-        >
-          Change {user.email}
-        </Button>
-      )}
-
-      <form onSubmit={handlePasswordSubmit} className="space-y-3 border-t pt-6">
-        <h3 className="mb-4 font-semibold text-lg">Change Password</h3>
-
-        <LabelInput
-          label="Current Password"
-          name="curr_passwd"
-          type="password"
-          placeholder="current password..."
-          error={validError || undefined}
-        />
-        <LabelInput
-          label="New Password"
-          name="passwd"
-          type="password"
-          placeholder="new password..."
-          error={validError || undefined}
-        />
-        <LabelInput
-          label="New Password Confirm"
-          name="passwd2"
-          type="password"
-          placeholder="new password confirm..."
-          error={validError || undefined}
-        />
-
-        <div className="flex justify-center gap-5">
-          <Button type="reset" variant={"outline"}>
-            <UndoDotIcon /> Cancel
+      <div className="w-96">
+        {isEditingEmail ? (
+          <EmailChanger email={user.email} toggleEditing={toggleEditingEmail} />
+        ) : (
+          <Button
+            onClick={toggleEditingEmail}
+            variant={"success"}
+            className="mt-3 h-12 w-full"
+          >
+            <PencilIcon /> {user.email}
           </Button>
-          <Button type="submit" variant={"primary"} disabled={isPending}>
-            <CheckLineIcon /> {isPending ? "Saving..." : "Save"}
+        )}
+      </div>
+
+      <div className="w-96">
+        {isEditingPassword ? (
+          <PasswordChanger toggleEditing={toggleEditingPassword} />
+        ) : (
+          <Button
+            onClick={toggleEditingPassword}
+            variant={"destructive"}
+            className="mt-3 h-12 w-full"
+          >
+            <PencilIcon /> Password
           </Button>
-        </div>
-      </form>
+        )}
+      </div>
     </div>
   );
 }

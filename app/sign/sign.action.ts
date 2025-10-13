@@ -73,12 +73,13 @@ export const authorize = async (
   if (err) return err;
 
   try {
-    const redirectTo = formData.get("redirectTo")?.toString() || "/bookcase";
-
     // 2. NextAuth singIn() 호출 → auth.ts credentials provider 실행
+    const redirectTo = formData.get("redirectTo")?.toString() || "/bookcase";
+    console.log("🚀 ~ redirectTo:", redirectTo);
     await signIn("credentials", { ...data, redirectTo });
   } catch (error) {
     // 3. AuthError 처리 (auth.ts에서 throw된 에러)
+    console.log("🚀 sign.action.authorize - error:", error);
     if (error instanceof AuthError) {
       let typeErr: string;
       switch (error.type) {
@@ -153,11 +154,8 @@ export const regist = async (
 
   // 2. 이메일 중복 확인
   const { email, nickname, passwd: orgPasswd } = data;
-  const mbr = await findMemberByEmail(email);
-  if (mbr)
-    return {
-      email: { errors: ["Duplicated Email Address!"], value: email },
-    };
+  const existsErr = existsEmail(email);
+  if (existsErr) return existsErr;
 
   // 3. 비밀번호 해싱 + emailcheck 토큰 생성
   const passwd = await hash(orgPasswd, 10);
@@ -243,7 +241,6 @@ export const resetPassword = async (
 
   const { email, passwd2, emailcheck } = data;
   const passwd = await hash(passwd2, 10);
-
   await prisma.member.update({
     where: { email, emailcheck },
     data: { passwd, emailcheck: null },
@@ -350,8 +347,7 @@ export const sendEmailChangeCode_일괄저장 = async (formData: FormData) => {
     });
 
   const [err, data] = validate(zobj, formData);
-  console.log("💻 - sign.action.ts - err, data:", err, data);
-
+  console.log("🚀 ~ err data:", err, data);
   if (err) return err;
 
   const dataErr: ValidError = {};
@@ -417,28 +413,24 @@ export const sendEmailChangeCode_일괄저장 = async (formData: FormData) => {
  */
 export type UpdateProfileImageReturn = ReturnType<typeof updateProfileImage>;
 export const updateProfileImage = async (formData: FormData) => {
-  // 1. Session 확인
   const session = await auth();
   if (!session?.user || !session.user.email) throw new Error("Need Login!");
 
   const { id, email } = session.user;
   const ent = Object.fromEntries(formData.entries());
-  console.log("💻 - sign.action.ts - ent:", ent);
-
-  // 2. 이미지 파일 유효성 검사
+  console.log("🚀 ~ ent:", ent);
   const zobj = z.object({
     image: z
       .instanceof(File)
-      .refine((file) => file.size <= 10 * 1024 * 1024, "Under 10MB!")
+      .refine((file) => file.size <= 10 * 1024 * 1024, "Under 10MB plz!")
       .refine((file) => file.type.startsWith("image/"), "Upload Image only!"),
   });
 
   const [err, data] = validate(zobj, formData);
-  // console.log('🚀 ~ err:', err);
+  console.log("🚀 ~ err:", err);
   // console.log('🚀 ~ data:', data);
   if (err) return [err];
 
-  // 3. 파일 저장 (public/profiles/)
   const uploadDir = path.join(process.cwd(), "public", "profiles");
   if (!existsSync(uploadDir)) mkdirSync(uploadDir);
 
@@ -449,13 +441,11 @@ export const updateProfileImage = async (formData: FormData) => {
   await writeFile(filePath, buffer);
   const image = `/profiles/${fileName}`;
 
-  // 4. Update DB
   const mbr = await prisma.member.update({
     where: { email },
     data: { image },
   });
 
-  // 5. 캐시 무효화
   revalidatePath("/profiles");
 
   return [null, mbr];
@@ -491,7 +481,48 @@ export const updateNickname = async (formData: FormData) => {
     where: { email },
     data: { nickname },
   });
+  console.log("🚀 ~ mbr:", mbr);
   return [err, mbr] as const;
+};
+
+export const sendEmailChangeCode = async (formData: FormData) => {
+  const session = await auth();
+  if (!session?.user || !session.user.email) throw new Error("Need Login!");
+
+  const { email, name } = session.user;
+
+  const zobj = z.object({
+    newEmail: z.email(),
+  });
+  const [err, data] = validate(zobj, formData);
+  if (err) return err;
+
+  const { newEmail } = data;
+  const existsErr = await existsEmail(newEmail, "newEmail");
+  if (existsErr) return existsErr;
+
+  const emailcheck = uniqNumId();
+  await prisma.member.update({
+    where: { email },
+    data: { emailcheck },
+  });
+
+  setTimeout(
+    async () => {
+      await prisma.member.update({
+        where: { email },
+        data: { emailcheck: null },
+      });
+    },
+    2 * 60 * 1000,
+  );
+
+  await sendmailByFetch({
+    email: newEmail,
+    emailcheck,
+    nickname: name || "",
+    emailType: "email-change-code",
+  });
 };
 
 /**
@@ -514,7 +545,7 @@ export const updateEmail = async (formData: FormData) => {
   const session = await auth();
   if (!session?.user || !session.user.email) throw new Error("Need Login!");
 
-  console.log("updateEmail ****>>", Object.fromEntries(formData.entries()));
+  console.log("****>>", Object.fromEntries(formData.entries()));
   const { email } = session.user;
   const mbr = await findMemberByEmail(email);
   if (!mbr || !mbr.emailcheck || mbr.emailcheck.length !== 5) {
@@ -525,12 +556,6 @@ export const updateEmail = async (formData: FormData) => {
       null,
     ] as const;
   }
-
-  // 디버깅: 입력된 코드와 저장된 코드 비교
-  const inputCode = formData.get("emailChangeCode")?.toString()?.trim() || "";
-  // console.log("🚀 ~ input code:", `"${inputCode}"`);
-  // console.log("🚀 ~ stored code:", `"${mbr.emailcheck}"`);
-  // console.log("🚀 ~ codes match:", inputCode === mbr.emailcheck);
 
   const zobj = z.object({
     newEmail: z.email(),
@@ -572,52 +597,54 @@ export const updatePassword = async (formData: FormData) => {
   const session = await auth();
   if (!session?.user || !session.user.email) throw new Error("Need Login!");
 
+  console.log("****>>", Object.fromEntries(formData.entries()));
   const { email } = session.user;
-  const mbr = await findMemberByEmail(email, true); // passwd 포함
+  const mbr = await findMemberByEmail(email);
 
-  // SNS 로그인 사용자는 비밀번호 변경 불가
-  if (!mbr?.passwd) {
-    return {
-      curr_passwd: {
-        errors: ["SNS login users cannot change password!"],
-      },
-    } as ValidError;
-  }
-
-  // 유효성 검사
   const zobj = z
     .object({
-      curr_passwd: z.string().min(6, "More than 6 characters!"),
-      passwd: z.string().min(6, "More than 6 characters!"),
-      passwd2: z.string().min(6, "More than 6 characters!"),
+      curr_passwd: z.string().min(6).optional(),
+      passwd: z.string().min(6),
+      passwd2: z.string().min(6),
     })
-    .refine(({ passwd, passwd2 }) => passwd === passwd2, {
-      path: ["passwd2"],
-      message: "Passwords are not matched!",
+    .superRefine(async ({ curr_passwd, passwd, passwd2 }, ctx) => {
+      let message: string = "";
+      let path: string[] = ["passwd2"];
+
+      const isMatchPassword = await comparePassword(
+        mbr?.passwd || "",
+        curr_passwd || "",
+      );
+      if (!isMatchPassword) {
+        message = "Not Match the current password!";
+        path = ["curr_passwd"];
+      } else if (!passwd || !passwd2) message = "Input the passwords!";
+      else if (passwd !== passwd2) message = "Not Match the password confirm!";
+
+      if (message) {
+        ctx.addIssue({
+          code: "custom",
+          message,
+          path,
+        });
+      }
     });
+
+  const val = await zobj.parseAsync(formData);
 
   const [err, data] = validate(zobj, formData);
   if (err) return err;
 
-  const { curr_passwd, passwd } = data;
-
-  // 현재 비밀번호 검증
-  const isValidPasswd = await comparePassword(curr_passwd, mbr.passwd);
-  if (!isValidPasswd) {
-    return {
-      curr_passwd: {
-        errors: ["Invalid current password!"],
-        value: curr_passwd,
-      },
-    } as ValidError;
+  const { newEmail, nickname, curr_passwd } = data;
+  if (mbr?.passwd && curr_passwd) {
+    const validCurrPasswd = await comparePassword(mbr?.passwd, curr_passwd);
+    if (!validCurrPasswd)
+      return {
+        ...dataErr,
+        curr_passwd: {
+          errors: ["Invalid current password!"],
+          value: curr_passwd,
+        },
+      };
   }
-
-  // 새 비밀번호 해싱 및 업데이트
-  const hashedPasswd = await hash(passwd, 10);
-  await prisma.member.update({
-    where: { email },
-    data: { passwd: hashedPasswd },
-  });
-
-  return null;
 };
