@@ -552,3 +552,72 @@ export const updateEmail = async (formData: FormData) => {
   console.log("🚀 ~ newMbr:", newMbr);
   return [null, newMbr] as const;
 };
+
+/**
+ * 📌 updatePassword - 비밀번호 변경
+ *
+ * Flow:
+ * 1. Session 확인
+ * 2. DB에서 현재 사용자 정보 조회 (비밀번호 포함)
+ * 3. SNS 로그인 사용자는 비밀번호 변경 불가
+ * 4. formData에서 curr_passwd, passwd, passwd2 추출 및 유효성 검사
+ * 5. 새 비밀번호와 확인 일치 여부 확인
+ * 6. 현재 비밀번호 검증
+ * 7. 새 비밀번호 해싱 및 DB 업데이트
+ *
+ * @param formData - curr_passwd, passwd, passwd2
+ * @returns [ValidError | null]
+ */
+export const updatePassword = async (formData: FormData) => {
+  const session = await auth();
+  if (!session?.user || !session.user.email) throw new Error("Need Login!");
+
+  const { email } = session.user;
+  const mbr = await findMemberByEmail(email, true); // passwd 포함
+
+  // SNS 로그인 사용자는 비밀번호 변경 불가
+  if (!mbr?.passwd) {
+    return {
+      curr_passwd: {
+        errors: ["SNS login users cannot change password!"],
+      },
+    } as ValidError;
+  }
+
+  // 유효성 검사
+  const zobj = z
+    .object({
+      curr_passwd: z.string().min(6, "More than 6 characters!"),
+      passwd: z.string().min(6, "More than 6 characters!"),
+      passwd2: z.string().min(6, "More than 6 characters!"),
+    })
+    .refine(({ passwd, passwd2 }) => passwd === passwd2, {
+      path: ["passwd2"],
+      message: "Passwords are not matched!",
+    });
+
+  const [err, data] = validate(zobj, formData);
+  if (err) return err;
+
+  const { curr_passwd, passwd } = data;
+
+  // 현재 비밀번호 검증
+  const isValidPasswd = await comparePassword(curr_passwd, mbr.passwd);
+  if (!isValidPasswd) {
+    return {
+      curr_passwd: {
+        errors: ["Invalid current password!"],
+        value: curr_passwd,
+      },
+    } as ValidError;
+  }
+
+  // 새 비밀번호 해싱 및 업데이트
+  const hashedPasswd = await hash(passwd, 10);
+  await prisma.member.update({
+    where: { email },
+    data: { passwd: hashedPasswd },
+  });
+
+  return null;
+};
