@@ -12,11 +12,55 @@ type Props = {
     isadmin?: boolean | undefined;
   } & User;
 };
+
+/**
+ * 📌 ChangeProfile - 프로필 정보 변경 컴포넌트
+ *
+ * 기능:
+ * 1. 닉네임 변경 (LabelEditor)
+ * 2. 이메일 변경 (EmailChanger)
+ * 3. 비밀번호 변경 (UI만 있음, 구현 미완)
+ *
+ * Flow:
+ * - 닉네임 변경:
+ *   1. LabelEditor에서 값 변경 감지 (isDirty)
+ *   2. Save 버튼 클릭 시 changeNickname() 호출
+ *   3. updateNickname() 서버 액션 실행
+ *   4. update()로 Session 업데이트
+ *   5. router.refresh()로 페이지 새로고침
+ *
+ * - 이메일 변경:
+ *   1. "Change email" 버튼 클릭 시 EmailChanger 표시
+ *   2. EmailChanger에서 인증 코드 발송 → 확인 → 이메일 변경
+ *
+ * @param user - Session user 정보
+ */
 export default function ChangeProfile({ user }: Props) {
   // 토큰 체크하는 시간필요 : 'revalidate refresh' 옵션 있다면 사용가능
   // const { update } = useSession({ required: true });
   const { update } = useSession();
+<<<<<<< Updated upstream
   const [diffEmail, setDiffEmail] = useState(false);
+=======
+  const router = useRouter(); //페이지 새로고침 (Session 반영)
+  const [isEditingEmail, toggleEditingEmail] = useReducer((pre) => !pre, true); // QQQ: false
+
+  /**
+   * 닉네임 변경 핸들러
+   *
+   * Flow:
+   * 1. updateNickname() 서버 액션 호출
+   * 2. 성공 시 update(mbr)로 Session 업데이트
+   * 3. router.refresh()로 auth cookie 반영
+   */
+  const changeNickname = async (formData: FormData) => {
+    const ent = Object.fromEntries(formData.entries());
+    const [err, mbr] = await updateNickname(formData);
+    if (err) return err;
+    await update(mbr);
+    router.refresh(); // auth의 cookie값 refresh
+  };
+>>>>>>> Stashed changes
 
   return (
     <form className="space-y-3 text-left">

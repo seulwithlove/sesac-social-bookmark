@@ -8,6 +8,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useActionState, useEffect, useReducer, useRef } from "react";
 import { authorize, regist } from "./sign.action";
 
+/**
+ * 📌 SignForm - 로그인/회원가입 폼 전환 컴포넌트
+ *
+ * 로그인과 회원가입 폼을 토글로 전환하는 최상위 컴포넌트
+ */
 export default function SignForm() {
   const [isSignin, toggleSign] = useReducer((pre) => !pre, true);
   return (
@@ -21,14 +26,31 @@ export default function SignForm() {
   );
 }
 
-// Remember me
+/**
+ * 🔑 Remember Me - 이메일 저장/불러오기 함수
+ *
+ * 로컬스토리지에 이메일을 저장하여 다음 로그인 시 자동 입력
+ */
 const storeEmail = (email: string | null) =>
   email === null
     ? localStorage.removeItem("SBM_LOCAL_EMAIL")
     : localStorage.setItem("SBM_LOCAL_EMAIL", email);
 
-const readEmail = () => localStorage.getItem("SBM_LOCAL_EMAIL");
+const readEmail = () => localStorage.getItem("SBM_LOCAL_EMAIL"); // 저장된 이메일 불러오기
 
+/**
+ * 📌 SignIn - 로그인 폼 컴포넌트
+ *
+ * Flow:
+ * 1. 사용자가 이메일/비밀번호 입력
+ * 2. Remember Me 체크 시 이메일을 로컬스토리지에 저장
+ * 3. authorize() 서버 액션 호출
+ * 4. NextAuth credential provider에서 인증 처리
+ * 5. auth.ts의 signIn callback 실행 → DB 검증
+ * 6. 성공 시 Session 생성 및 redirectTo로 이동
+ *
+ * @param toggleSign - 회원가입 폼으로 전환하는 함수
+ */
 function SignIn({ toggleSign }: { toggleSign: () => void }) {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
@@ -46,13 +68,18 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
   );
 
   const makeLoginAction = async (formData: FormData) => {
-    rememberMe();
+    rememberMe(); // 이메일 저장 처리
 
-    if (redirectTo) formData.set("redirectTo", redirectTo); // 노출하면 안되는 것
-    await makeLogin(formData); // await 필수!
-    router.refresh(); // act like refreshing whole page
+    if (redirectTo) formData.set("redirectTo", redirectTo); // redirectTo를 formData에 추가 (hidden input으로 노출하지 않음)
+    await makeLogin(formData); // authorize() 호출 (await 필수!)
+    router.refresh(); // 페이지 새로고침으로 Session 반영
   };
 
+  /**
+   * Remember Me 체크박스 처리
+   * - 체크되어 있으면 이메일을 로컬스토리지에 저장
+   * - 체크 해제되어 있으면 로컬스토리지에서 삭제
+   */
   const rememberMe = () => {
     if (rememberRef.current?.checked && emailRef.current?.value)
       storeEmail(emailRef.current.value);
@@ -131,14 +158,19 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
   );
 }
 
-// const dummy = {
-//   email: "lee.seeul.00@gmail.com",
-//   // email: "rosily313@gmail.com",
-//   passwd: "121212",
-//   passwd2: "121212",
-//   nickname: "seul",
-// };
-
+/**
+ * 📌 SignUp - 회원가입 폼 컴포넌트
+ *
+ * Flow:
+ * 1. 사용자가 이메일/닉네임/비밀번호/비밀번호확인 입력
+ * 2. regist() 서버 액션 호출
+ * 3. 유효성 검사 (이메일 중복, 비밀번호 일치 등)
+ * 4. DB에 회원 정보 저장 (emailcheck 토큰 포함)
+ * 5. sendmailByFetch()로 이메일 인증 메일 발송
+ * 6. /sign/error?error=CheckEmail 페이지로 리다이렉트 (이메일 확인 안내)
+ *
+ * @param toggleSign - 로그인 폼으로 전환하는 함수
+ */
 function SignUp({ toggleSign }: { toggleSign: () => void }) {
   const [validError, makeRegist, isPending] = useActionState(regist, undefined);
 

@@ -8,7 +8,8 @@ export default function SignOutButton({ name }: { name: string }) {
   return (
     <form action={logout}>
       <Button variant={"success"}>
-        <LogOutIcon /> SignOut {name}
+        {/* <LogOutIcon /> Sign out {name} */}
+        <LogOutIcon /> Sign out
       </Button>
     </form>
   );
