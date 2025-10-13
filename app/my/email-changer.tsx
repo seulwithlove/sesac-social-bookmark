@@ -16,8 +16,7 @@ import {
   useTransition,
 } from "react";
 import { flushSync } from "react-dom";
-import { sendEmailChangeCode } from "../sign/mail.action";
-import { updateEmail } from "../sign/sign.action";
+import { sendEmailChangeCode, updateEmail } from "../sign/sign.action";
 
 type Props = {
   email: string | null | undefined;
@@ -56,6 +55,7 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
   const [validError, setValidError] = useState<ValidError>();
 
   const formRef = useRef<HTMLFormElement>(null);
+  const codeRef = useRef<HTMLInputElement>(null);
   const [submitType, setSubmitType] = useState<"sendmail" | "confirm">(
     "sendmail",
   );
@@ -78,15 +78,19 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
     startTransition(async () => {
       if (submitType === "sendmail") {
         const err = await sendEmailChangeCode(formData);
-        if (err) setValidError(err);
-        else toggleSendCode();
+        if (err) return setValidError(err);
+        setValidError(undefined);
+        if (!didSendCode) toggleSendCode();
       } else if (submitType === "confirm") {
+        formData.set("emailChangeCode", codeRef.current?.value || "");
         const [err, mbr] = await updateEmail(formData);
 
         if (err) {
           setValidError(err);
         } else {
-          await update(mbr);
+          await update(mbr); // Session 반영
+          toggleEditing();
+          toggleSendCode();
           router.refresh();
         }
       }
@@ -101,7 +105,7 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
   const sendmail = (e: MouseEvent) => {
     e.preventDefault();
     setSubmitType(() => "sendmail");
-    formRef.current?.requestSubmit();
+    formRef.current?.requestSubmit(); // 그냥 submit을 하면 onSubmit action을 타지 않음
   };
 
   /**
@@ -149,6 +153,7 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
             label="Email change code (until 2 min)"
             type="text"
             name="emailChangeCode"
+            ref={codeRef}
             error={validError}
             placeholder="input code..."
           />
