@@ -4,7 +4,7 @@
 > 2025.8 ~ 2025.10(진행중)<br>
 
 ## 🎯 프로젝트 개요
-> Next.js(App Router)와 Prisma를 기반으로<br> 인증, 상태 관리, 서버 액션 등 **현대적 풀스택 개발 패턴** 학습
+> Next.js(App Router)와 Prisma를 기반으로<br> 인증, 상태 관리, 서버 액션 등 **풀스택 개발 패턴** 학습
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.5.2-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.1.0-blue?style=flat-square&logo=react)](https://reactjs.org/)
@@ -20,19 +20,19 @@
 
 ## 주요 기능
 
-#### 🔐 인증 및 사용자 관리 (☑️ 구현 완료)
-- **다중 OAuth 로그인**: **NextAuth v5, Google·GitHub·Kakao·Naver**
-- **이메일 인증 시스템**: 회원가입 시 이메일 인증 필수 - **Nodemailer, JWT**
-- **비밀번호 찾기**: 이메일 기반 비밀번호 재설정 - **서버 액션 + bcryptjs**
-- **프로필 관리**: 닉네임, 이미지, 자기소개 수정 가능 - **Prisma ORM**
+#### 🔐 인증 및 사용자 관리 (💬 진행중)
+- **다중 OAuth 로그인**: **NextAuth v5, Google·GitHub·Kakao·Naver** (☑️)
+- **이메일 인증 시스템**: 회원가입 시 이메일 인증 필수 - **Nodemailer, JWT** (☑️)
+- **비밀번호 찾기**: 이메일 기반 비밀번호 재설정 - **서버 액션 + bcryptjs** (☑️)
+- **프로필 관리**: 닉네임, 이미지, 개인정보 수정 가능 - **Prisma ORM, 서버 액션** (💬)
 
-#### 📖 북케이스 (Book) 시스템 (💬 진행중)
+#### 📖 북케이스 (Book) 시스템 
 - 북마크 컬렉션 생성 및 관리
 - 공개/비공개 설정
 - 다른 사용자의 북케이스 팔로우
 - 북케이스별 북마크 조회
 
-#### 🔖 북마크 (Mark) 관리 (💬 예정)
+#### 🔖 북마크 (Mark) 관리 
 - URL 기반 북마크 저장
 - 북마크에 대한 좋아요 기능
 - 북마크에 대한 댓글 (Talk) 기능
@@ -68,20 +68,20 @@
 ## 📁 프로젝트 구조
 ```
 sesac-social-bookmark/
-├── app/               # Next.js App Router
+├── app/             # Next.js App Router
 │ ├── api/             # API Routes
-│ │ ├── auth/          # NextAuth 설정
-│ │ └── sendmail/      # 이메일 발송 API
-│ ├── bookcase/        # 북케이스 페이지
+│ │ ├── auth/            # NextAuth 설정
+│ │ └── sendmail/        # 이메일 발송 API
+│ ├── bookcase/        # 북마크 모음 페이지
 │ ├── my/              # 마이페이지
 │ ├── sign/            # 로그인/회원가입
 │ └── forgotpasswd/    # 비밀번호 찾기
 ├── components/ 
 │ └── ui/ 
 ├── lib/               # 유틸리티 및 설정
-│ ├── auth.ts          # NextAuth 설정
-│ ├── db.ts            # Prisma 클라이언트
-│ └── validator.ts     # 입력 검증 로직
+│ ├── auth.ts            # NextAuth 설정
+│ ├── db.ts              # Prisma 클라이언트
+│ └── validator.ts       # 입력 검증 로직
 ├── prisma/            # Prisma 스키마 및 마이그레이션
 └── public/            # 정적 파일
 ```
