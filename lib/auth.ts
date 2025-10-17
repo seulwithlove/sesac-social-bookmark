@@ -150,15 +150,8 @@ export const {
         token.name = userData.name || userData.nickname;
         token.image = userData.image;
         token.isadmin = userData.isadmin;
-
-        // if (account) {
-        //   token.accessToken = account?.id_token;
-        //   token.accessTokenExpires =
-        //     Date.now() + (account.expires_in ?? 0) * 1000; // 서버에 요청할때마다 새로 요청
-        //   token.refreshToken = account.refresh_token;
-        // }
       }
-
+      token.exp = Math.floor(Date.now() / 1000) + 10 * 60;
       return token; // sns login일때 - session callback으로 전달
     },
 
@@ -181,14 +174,14 @@ export const {
         session.user.email = token.email as string;
         session.user.image = token.image as string;
         session.user.isadmin = token.isadmin;
+        if (token.exp) session.expires = new Date(token.exp * 1000);
       }
-
       return session;
     },
   },
 
   trustHost: true, // Vercel 등 호스팅 환경에서 필요
-  jwt: { maxAge: 30 * 60 },
+  // jwt: { maxAge: 30 * 60 },
   pages: {
     signIn: "/sign",
     error: "/sign/error",
