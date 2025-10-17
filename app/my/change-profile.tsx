@@ -2,6 +2,7 @@
 
 import LabelEditor from "@/components/label-editor";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { PencilIcon } from "lucide-react";
 import type { User } from "next-auth";
 import { useSession } from "next-auth/react";
@@ -74,7 +75,7 @@ export default function ChangeProfile({ user }: Props) {
   };
 
   return (
-    <div className="space-y-3 text-left">
+    <div className="flex flex-col gap-5 text-left">
       <LabelEditor
         label="nickname"
         name="nickname"
@@ -82,7 +83,7 @@ export default function ChangeProfile({ user }: Props) {
         saveAction={changeNickname}
       />
 
-      <div className="w-96">
+      <div className={cn({ "w-[80%]": !isEditingEmail })}>
         {isEditingEmail ? (
           <EmailChanger email={user.email} toggleEditing={toggleEditingEmail} />
         ) : (
@@ -96,7 +97,7 @@ export default function ChangeProfile({ user }: Props) {
         )}
       </div>
 
-      <div className="w-96">
+      <div className={cn({ "w-[80%]": !isEditingPassword })}>
         {isEditingPassword ? (
           <PasswordChanger toggleEditing={toggleEditingPassword} />
         ) : (

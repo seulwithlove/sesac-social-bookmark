@@ -181,7 +181,7 @@ export const {
   },
 
   trustHost: true, // Vercel 등 호스팅 환경에서 필요
-  // jwt: { maxAge: 30 * 60 },
+  jwt: { maxAge: 30 * 60 },
   pages: {
     signIn: "/sign",
     error: "/sign/error",
