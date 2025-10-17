@@ -6,7 +6,7 @@ export default prisma;
 
 export const findMemberByEmail = async (
   email: string,
-  passwd: boolean = false,
+  isIncludePasswd: boolean = false,
 ) =>
   prisma.member.findUnique({
     select: {
@@ -16,7 +16,7 @@ export const findMemberByEmail = async (
       emailcheck: true,
       image: true,
       outdt: true,
-      passwd,
+      passwd: isIncludePasswd,
     },
     where: { email },
   });

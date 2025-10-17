@@ -71,7 +71,6 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
    * - "confirm": updateEmail() → 인증 코드 확인 후 이메일 변경
    */
   const submitHandler = (e: FormEvent<HTMLFormElement>) => {
-    console.log("##############", submitType);
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     console.log("*", Object.fromEntries(formData.entries()));
@@ -137,6 +136,7 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
           defaultValue={email || ""}
           focus={true}
           onChange={(e) => setDiffEmail(e.target.value !== email)}
+          onKeyDown={(e) => e.key === "Escape" && toggleEditing}
           className="w-full"
           error={validError}
         />

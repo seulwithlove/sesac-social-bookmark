@@ -52,8 +52,8 @@ export default function ChangeProfile({ user }: Props) {
   const [isEditingEmail, toggleEditingEmail] = useReducer((pre) => !pre, false);
   const [isEditingPassword, toggleEditingPassword] = useReducer(
     (pre) => !pre,
-    true,
-  ); // QQQ: false
+    false,
+  );
 
   /**
    * 닉네임 변경 핸들러
