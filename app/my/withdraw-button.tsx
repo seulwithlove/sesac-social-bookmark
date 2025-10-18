@@ -14,13 +14,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { AlertTriangleIcon, FileOutputIcon } from "lucide-react";
 import { useTransition } from "react";
-import { withdraw } from "../sign/sign.action";
+import { withDraw } from "../sign/sign.action";
 
 export default function WithdrawButton() {
   const [isPending, startTransition] = useTransition();
   const makeWithdraw = () => {
     startTransition(async () => {
-      await withdraw();
+      await withDraw();
     });
   };
 
