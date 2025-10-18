@@ -33,7 +33,7 @@ export default function Sign({ searchParams }: Props) {
   const { redirectTo } = use(searchParams);
 
   return (
-    <div className="grid h-full place-items-center px-5">
+    <div className="container mx-auto grid h-full place-items-center px-5">
       <div className="flex w-full overflow-hidden rounded-md border shadow-md [&>div]:p-4">
         {/* 왼쪽: 로그인/회원가입 폼 영역 */}
         <div className="flex-1">
