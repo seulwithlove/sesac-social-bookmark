@@ -8,6 +8,8 @@ import z from "zod";
 import prisma, { findMemberByEmail } from "./db";
 import { comparePassword, validateObject } from "./validator";
 
+export const MAX_AGE = 30 * 60; // session을 유지할 시간 - middleware에서도 사용
+
 /**
  * 📌 NextAuth 설정 - 인증 시스템의 핵심
  *
@@ -31,7 +33,15 @@ export const {
   signOut,
 } = NextAuth({
   providers: [
-    Google,
+    Google({
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline", // refresh_token을 받을수 있도록 함
+          response_type: "code",
+        },
+      },
+    }),
     Kakao,
     Naver,
     Github,
@@ -83,6 +93,7 @@ export const {
      * @returns true | false | string (string은 redirect URL)
      */
     async signIn({ user, account }) {
+      console.log("account", account);
       const isCredential = account?.provider === "credentials";
       const { email, name: nickname, image } = user;
       if (!email) return false;
@@ -151,7 +162,7 @@ export const {
         token.image = userData.image;
         token.isadmin = userData.isadmin;
       }
-      token.exp = Math.floor(Date.now() / 1000) + 10 * 60;
+      // token.exp = Math.floor(Date.now() / 1000) + 10 * 60;
       return token; // sns login일때 - session callback으로 전달
     },
 
@@ -174,20 +185,22 @@ export const {
         session.user.email = token.email as string;
         session.user.image = token.image as string;
         session.user.isadmin = token.isadmin;
-        if (token.exp) session.expires = new Date(token.exp * 1000);
+        // if (token.exp) session.expires = new Date(token.exp * 1000);
       }
       return session;
     },
   },
 
   trustHost: true, // Vercel 등 호스팅 환경에서 필요
-  jwt: { maxAge: 30 * 60 },
+  jwt: { maxAge: MAX_AGE },
   pages: {
     signIn: "/sign",
     error: "/sign/error",
   },
   session: {
     strategy: "jwt",
+    maxAge: MAX_AGE, // default: 1 month
+    // updateAge: 10,  // 쿠키 굽는 단위시간(10초)
   },
 });
 
