@@ -2,7 +2,7 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { v4 as uuid } from "uuid";
 export { default as DummyProfile } from "@/public/profile-dummy.png";
-
+export const DummyProfileFile = "/profile-dummy.png";
 export const newToken = () => uuid();
 
 export function cn(...inputs: ClassValue[]) {

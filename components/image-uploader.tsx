@@ -1,6 +1,6 @@
 "use client";
 
-import type { UpdateProfileImageTypeReturn } from "@/app/sign/sign.action";
+import type { UpdateProfileImageReturn } from "@/app/sign/sign.action";
 import { cn, DummyProfile } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import Image, { type StaticImageData } from "next/image";
@@ -16,7 +16,7 @@ import {
 type Props = {
   src: string | StaticImageData;
   alt?: string;
-  changeImage?: (formData: FormData) => UpdateProfileImageTypeReturn;
+  changeImage?: (formData: FormData) => UpdateProfileImageReturn;
 };
 
 export default function ImageUploader({ src, alt, changeImage }: Props) {
