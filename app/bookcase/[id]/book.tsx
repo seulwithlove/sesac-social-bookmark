@@ -1,19 +1,7 @@
-import ImageUploader from "@/components/image-uploader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { DummyProfile } from "@/lib/utils";
-import { DialogTitle } from "@radix-ui/react-dialog";
 import { HeartHandshake, MoreHorizontalIcon, PlusIcon } from "lucide-react";
+import Mark from "./mark";
 
 export default function Book() {
   return (
@@ -35,41 +23,11 @@ export default function Book() {
           <HeartHandshake />
         </Button>
       </div>
+
       <div className="space-y-2 overflow-y-scroll rounded-md bg-sky-300 p-3">
-        <div className="space-y-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <span>Mark content</span>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-w[425px]">
-              <DialogHeader>
-                <DialogTitle>Mark Content</DialogTitle>
-              </DialogHeader>
-              <div className="flex gap-4">
-                <div className="w-50">
-                  <ImageUploader src={DummyProfile} alt={"site preview"} />
-                </div>
-                <div className="flex flex-col">
-                  <div className="my-2">
-                    <Label htmlFor="url">Site URL</Label>
-                    <Input id="url" name="url" defaultValue="bookmark.com" />
-                  </div>
-                  <div className="my-2">
-                    <Label htmlFor="url">Description</Label>
-                    <Input id="desc" name="desc" defaultValue="blahblah" />
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">Cancel</Button>
-                </DialogClose>
-                <Button type="submit">Save changes</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+        <Mark />
       </div>
+
       <div className="my-1 flex justify-between font-medium">
         <Button
           variant={"ghost"}
