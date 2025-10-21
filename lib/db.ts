@@ -1,8 +1,16 @@
 import { PrismaClient } from "@/lib/generated/prisma/client";
 
-const prisma = new PrismaClient();
+// Singleton
+const newInstance = () => new PrismaClient();
 
+// biome-ignore lint/suspicious/noShadowRestrictedNames: too many connections problem
+declare const globalThis: {
+  prismaGlobal: ReturnType<typeof newInstance>;
+} & typeof global;
+
+const prisma = globalThis.prismaGlobal ?? newInstance();
 export default prisma;
+globalThis.prismaGlobal = prisma; // set
 
 export const findMemberByEmail = async (
   email: string,
@@ -51,3 +59,16 @@ export const findMemberByIdWithCount = async (id: number | string) => {
     where: { id: Number(id) },
   });
 };
+
+// book
+export type BookAllColumn = Awaited<ReturnType<typeof findBookWithMarkById>>;
+
+export const findBookById = async (id: number) =>
+  prisma.book.findUnique({
+    where: { id },
+  });
+export const findBookWithMarkById = async (id: number) =>
+  prisma.book.findUnique({
+    where: { id },
+    include: { Mark: true },
+  });

@@ -17,7 +17,7 @@ type Props =
       withName?: boolean;
     };
 
-export default function UserAvater({ id, member, withName }: Props) {
+export default function UserAvatar({ id, member, withName }: Props) {
   const mbr = member ? member : use(findMemberByIdWithCount(id));
 
   if (!mbr)

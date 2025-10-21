@@ -1,7 +1,13 @@
+import IconLabel from "@/components/icon-label";
 import { Button } from "@/components/ui/button";
-import UserAvater from "@/components/user-avtar";
-import { findMemberByIdWithCount } from "@/lib/db";
-import { PlusIcon } from "lucide-react";
+import UserAvatar from "@/components/user-avtar";
+import prisma, { findMemberByIdWithCount } from "@/lib/db";
+import {
+  AlbumIcon,
+  BookMarkedIcon,
+  PlusIcon,
+  UserRoundPlusIcon,
+} from "lucide-react";
 import { use } from "react";
 import Book from "./book";
 
@@ -14,24 +20,35 @@ export default function BookcaseNickname({ params }: Props) {
   const mbr = use(findMemberByIdWithCount(id));
   if (!mbr) return <h1 className="text-2xl">User Not Found</h1>;
 
+  const books = use(
+    prisma.book.findMany({
+      where: { member: Number(id) },
+      include: { Mark: true },
+    }),
+  );
   return (
-    <div className="my-2 flex max-h-full flex-col">
-      <h1 className="flex items-center justify-between font-semibold text-2xl">
-        <div className="flex">
+    <div className="flex max-h-full flex-col py-2">
+      <h1 className="flex items-center justify-between px-5 font-semibold text-2xl">
+        <div className="flex items-center">
           {/* <UserAvatar id={id} withName={true} /> */}
-          {mbr && <UserAvater member={mbr} withName={true} />}
+          {mbr && <UserAvatar member={mbr} withName={true} />}
           <span className="ml-2 font-medium text-green-600">Bookcase</span>
         </div>
-        <span className="text-lg text-muted-foreground">
-          {mbr?._count.Book} Books, {mbr?._count.Mark} Marks, 50 Followers
+        <span className="flex gap-3 text-lg">
+          <IconLabel icon={<BookMarkedIcon />}>{mbr._count.Book}</IconLabel>
+          <IconLabel icon={<AlbumIcon />} noti="primary">
+            {mbr._count.Mark}
+          </IconLabel>
+          <IconLabel icon={<UserRoundPlusIcon />} noti="destructive">
+            50
+          </IconLabel>
         </span>
       </h1>
 
-      {/* sm:flex - mobile에서 세로로 볼 경우 추가*/}
-      <div className="my-1 flex gap-2 overflow-x-scroll">
-        <Book />
-        <Book />
-        <Book />
+      <div className="flex gap-2 overflow-x-scroll py-2">
+        {books.map((book) => (
+          <Book key={book.id} book={book} />
+        ))}
 
         <Button
           variant={"ghost"}

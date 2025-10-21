@@ -1,30 +1,74 @@
+import IconLabel from "@/components/icon-label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { HeartHandshake, MoreHorizontalIcon, PlusIcon } from "lucide-react";
+import { auth } from "@/lib/auth";
+import { findBookWithMarkById, type BookAllColumn } from "@/lib/db";
+import { cn } from "@/lib/utils";
+import { MoreHorizontalIcon, PlusIcon, UserRoundPlusIcon } from "lucide-react";
+import { use } from "react";
 import Mark from "./mark";
 
-export default function Book() {
+type Props =
+  | {
+      id: number;
+      book?: undefined;
+    }
+  | { id?: undefined; book: NonNullable<BookAllColumn> };
+
+export default function Book({ id, book }: Props) {
+  const data = book ? book : use(findBookWithMarkById(id));
+  if (!data)
+    return (
+      <h1 className="font-semibold text-lg text-muted-foreground">
+        Book is not Found!
+      </h1>
+    );
+
+  const { member, title, remark, ispublic, withdel } = data;
+  const session = use(auth());
+
+  const isMine = session?.user.id === String(member);
+
   return (
-    <div className="flex w-96 flex-col justify-start rounded-lg border-2 border-red-300 bg-slate-200 px-2">
+    <div className="flex w-80 flex-shirink-0 flex-col justify-start rounded-lg border-2 border-red-300 bg-slate-200 pl-2">
       <div className="flex items-center justify-between">
-        <div className="flex items-center">
-          <h1 className="my-2 font-medium text-xl">Book Title</h1>
-          <Badge
-            className="ml-2 h-5 min-w-5 rounded-full bg-slate-50 px-1 font-mono tabular-nums"
-            variant={"outline"}
-          >
-            8
-          </Badge>
-        </div>
-        <Button
-          variant={"ghost"}
-          className="font-medium text-lg hover:bg-slate-300"
+        <h1
+          className={cn(
+            "truncate font-medium text-xl tracking-tighter",
+            ispublic
+              ? "text-green-500 text-shadow-green-300"
+              : "text-muted-foreground text-shadow-gray-300",
+          )}
         >
-          <HeartHandshake />
-        </Button>
+          {title}
+        </h1>
+
+        {isMine ? (
+          <Button
+            variant={"ghost"}
+            className="font-semibold text-lg hover:bg-slate-300"
+          >
+            <MoreHorizontalIcon />
+          </Button>
+        ) : (
+          (ispublic ?? (
+            <Button
+              variant={"ghost"}
+              className="font-semibold text-lg hover:bg-slate-300"
+            >
+              <IconLabel
+                icon={<UserRoundPlusIcon className="text-green-500" />}
+                noti={"success"}
+              >
+                30
+              </IconLabel>
+            </Button>
+          ))
+        )}
       </div>
 
-      <div className="space-y-2 overflow-y-scroll rounded-md bg-sky-300 p-3">
+      <div className="max-h-full space-y-2 overflow-y-scroll rounded-lg pr-2 pb-3">
+        <Mark />
         <Mark />
       </div>
 
@@ -36,12 +80,12 @@ export default function Book() {
           <PlusIcon /> Add a Mark
         </Button>
 
-        <Button
-          variant={"ghost"}
-          className="font-medium text-lg hover:bg-slate-300"
+        <Badge
+          variant={"outline"}
+          className="ml-2 h-5 min-w-5 rounded-full bg-slate-50 px-1"
         >
-          <MoreHorizontalIcon />
-        </Button>
+          8
+        </Badge>
       </div>
     </div>
   );
