@@ -37,7 +37,7 @@ export default function UserAvater({ id, member, withName }: Props) {
             <AvatarFallback>{mbr.nickname.substring(0, 2)}</AvatarFallback>
           </Avatar>
         </HoverCardTrigger>
-        <HoverCardContent className="w-80 max-w-80">
+        <HoverCardContent className="w-60 max-w-80">
           <div className="flex justify-between gap-1">
             <div className="w-20">
               <Avatar className="h-16 w-16">

@@ -72,7 +72,7 @@ export async function middleware(req: NextRequest) {
 export const config = {
   // runtime: "nodejs",
   matcher: [
-    "/((?!sign|_next/static|_next/image|api/auth|api/sendmail|forgotpasswd|registcheck|favicon.ico|robots.txt|.well-known|$).*)",
+    "/((?!sign|_next/static|_next/image|api/auth|api/sendmail|forgotpasswd|registcheck|favicon.ico|robots.txt|.well-known|bookcase/|profile|$).*)",
     // "/api/:path*",
     "/",
   ],
