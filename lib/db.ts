@@ -1,3 +1,5 @@
+"only server";
+
 import { PrismaClient } from "@/lib/generated/prisma/client";
 
 // Singleton
@@ -62,6 +64,10 @@ export const findMemberByIdWithCount = async (id: number | string) => {
 
 // book
 export type BookAllColumn = Awaited<ReturnType<typeof findBookWithMarkById>>;
+export type BookData = Omit<
+  NonNullable<BookAllColumn>,
+  "Mark" | "createdAt" | "updatedAt"
+>;
 
 export const findBookById = async (id: number) =>
   prisma.book.findUnique({
