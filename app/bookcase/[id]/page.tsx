@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { use } from "react";
 import Book from "./book";
+import BookDialog from "./book-dialog";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -27,12 +28,14 @@ export default function BookcaseNickname({ params }: Props) {
     }),
   );
   return (
-    <div className="flex max-h-full flex-col py-2">
+    <div className="flex max-h-full flex-col pt-2">
       <h1 className="flex items-center justify-between px-5 font-semibold text-2xl">
-        <div className="flex items-center">
+        <div className="flex items-center tracking-wider">
           {/* <UserAvatar id={id} withName={true} /> */}
           {mbr && <UserAvatar member={mbr} withName={true} />}
-          <span className="ml-2 font-medium text-green-600">Bookcase</span>
+          <span className="ml-2 font-medium text-green-600 tracking-tighter">
+            Bookcase
+          </span>
         </div>
         <span className="flex gap-3 text-lg">
           <IconLabel icon={<BookMarkedIcon />}>{mbr._count.Book}</IconLabel>
@@ -45,17 +48,18 @@ export default function BookcaseNickname({ params }: Props) {
         </span>
       </h1>
 
-      <div className="flex gap-2 overflow-x-scroll py-2">
+      <div className="flex gap-3 overflow-x-scroll py-2">
         {books.map((book) => (
           <Book key={book.id} book={book} />
         ))}
-
-        <Button
-          variant={"ghost"}
-          className="flex w-96 justify-start bg-slate-200 font-semibold text-lg hover:bg-slate-300"
-        >
-          <PlusIcon /> Add a Book
-        </Button>
+        <BookDialog>
+          <Button
+            variant={"ghost"}
+            className="flex w-72 justify-start rounded-full bg-slate-200 font-semibold text-lg hover:bg-slate-300"
+          >
+            <PlusIcon /> Add a Book
+          </Button>
+        </BookDialog>
       </div>
     </div>
   );

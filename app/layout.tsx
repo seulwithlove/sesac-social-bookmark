@@ -47,9 +47,9 @@ export default async function RootLayout({
                   href="/"
                   className="flex items-center font-semibold text-3xl text-green-500 tracking-tight"
                 >
-                  <BookMarkedIcon size={28} />
-                  BookMark
+                  <BookMarkedIcon size={28} /> BookMark
                 </Link>
+
                 <Nav />
               </header>
               <main className="flex-1 overflow-auto px-2">{children}</main>

@@ -10,7 +10,7 @@ type Prop = {
 export default function IconLabel({
   icon,
   size = 24,
-  noti = "default",
+  noti,
   children,
 }: PropsWithChildren<Prop>) {
   const lucideIcon = cloneElement(icon, {
@@ -19,7 +19,7 @@ export default function IconLabel({
   });
 
   return (
-    <div className="relative flex items-center gap-2">
+    <div className="relative flex items-center">
       {lucideIcon}
       {noti ? (
         <small

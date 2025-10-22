@@ -1,10 +1,15 @@
 import IconLabel from "@/components/icon-label";
-import { Badge } from "@/components/ui/badge";
+import ToolTip from "@/components/tool-tip";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 import { findBookWithMarkById, type BookAllColumn } from "@/lib/db";
 import { cn } from "@/lib/utils";
-import { MoreHorizontalIcon, PlusIcon, UserRoundPlusIcon } from "lucide-react";
+import {
+  CopyXIcon,
+  MoreHorizontalIcon,
+  PlusIcon,
+  UserRoundPlusIcon,
+} from "lucide-react";
 import { use } from "react";
 import Mark from "./mark";
 
@@ -24,17 +29,16 @@ export default function Book({ id, book }: Props) {
       </h1>
     );
 
-  const { member, title, remark, ispublic, withdel } = data;
+  const { id: BookId, title, remark, ispublic, withdel, member } = data;
   const session = use(auth());
-
   const isMine = session?.user.id === String(member);
 
   return (
-    <div className="flex w-80 flex-shirink-0 flex-col justify-start rounded-lg border-2 border-red-300 bg-slate-200 pl-2">
-      <div className="flex items-center justify-between">
+    <div className="flex w-80 flex-shirink-0 flex-col justify-start rounded-lg bg-slate-200 pl-2">
+      <div className="flex items-center justify-between pr-2">
         <h1
           className={cn(
-            "truncate font-medium text-xl tracking-tighter",
+            "truncate p-2 font-semibold text-xl tracking-tighter",
             ispublic
               ? "text-green-500 text-shadow-green-300"
               : "text-muted-foreground text-shadow-gray-300",
@@ -60,7 +64,7 @@ export default function Book({ id, book }: Props) {
                 icon={<UserRoundPlusIcon className="text-green-500" />}
                 noti={"success"}
               >
-                30
+                <small>30</small>
               </IconLabel>
             </Button>
           ))
@@ -71,22 +75,22 @@ export default function Book({ id, book }: Props) {
         <Mark />
         <Mark />
       </div>
+      {isMine && (
+        <div className="my-1 flex items-center justify-between pr-2 font-medium">
+          <Button
+            variant={"ghost"}
+            className="flex w-[80%] justify-start font-semibold text-lg hover:bg-slate-300"
+          >
+            <PlusIcon /> Add a Mark
+          </Button>
 
-      <div className="my-1 flex justify-between font-medium">
-        <Button
-          variant={"ghost"}
-          className="flex w-[80%] justify-start font-semibold text-lg hover:bg-slate-300"
-        >
-          <PlusIcon /> Add a Mark
-        </Button>
-
-        <Badge
-          variant={"outline"}
-          className="ml-2 h-5 min-w-5 rounded-full bg-slate-50 px-1"
-        >
-          8
-        </Badge>
-      </div>
+          {withdel && (
+            <ToolTip content={"With Del"}>
+              <CopyXIcon className="text-red-300" />
+            </ToolTip>
+          )}
+        </div>
+      )}
     </div>
   );
 }
