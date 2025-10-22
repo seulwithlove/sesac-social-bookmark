@@ -10,36 +10,16 @@ const NEED_COOKIES = ["/"];
 
 export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: SECRET });
-  // console.log("💻 - middleware.ts - token:", token);
-
-  // const ctoken = req.cookies.get(SALT); // browser's cookie
-  // console.log("💻 - middleware.ts - ctoken:", ctoken);
-  // if (ctoken) {
-  //   const dectoken = await decode({
-  //     token: ctoken.value,
-  //     secret: SECRET,
-  //     salt: SALT,
-  //   });
-  //   console.log("💻 - middleware.ts - dectoken:", dectoken);
-  // }
 
   const pathname = req.nextUrl.pathname;
-  if (!token && NEED_COOKIES.includes(pathname)) return NextResponse.next();
+  if (!token) {
+    if (NEED_COOKIES.includes(pathname) || pathname.includes("/bookcase/"))
+      return NextResponse.next();
 
-  if (!token)
     return NextResponse.redirect(
       new URL(`/sign?redirectTo=${pathname}`, req.url),
     );
-
-  // const session = await auth(); // check if logged in
-  // console.log("💻 - middleware.ts - session:", session);
-
-  // const didLogin = !!session?.user?.email;
-  // if (!didLogin) {
-  //   return NextResponse.redirect(
-  //     new URL(`/sign?redirectTo=${pathname}`, req.url),
-  //   );
-  // }
+  }
 
   const exp = token.exp ? token.exp * 1000 : 0; // undefined 대응
   console.log("💻 - middleware.ts - exp:", new Date(exp).toLocaleString());
@@ -72,7 +52,7 @@ export async function middleware(req: NextRequest) {
 export const config = {
   // runtime: "nodejs",
   matcher: [
-    "/((?!sign|_next/static|_next/image|api/auth|api/sendmail|forgotpasswd|registcheck|favicon.ico|robots.txt|.well-known|bookcase/|profile|$).*)",
+    "/((?!sign|_next/static|_next/image|api/auth|api/sendmail|forgotpasswd|registcheck|favicon.ico|robots.txt|.well-known|profile|$).*)",
     // "/api/:path*",
     "/",
   ],
