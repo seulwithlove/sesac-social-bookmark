@@ -50,7 +50,13 @@ export const saveBook = async (formData: FormData) => {
   }
 };
 
-export const deleteBook = async (id: number) =>
+export const deleteBook = async (id: number) => {
+  const session = await auth();
+  if (!session?.user || !session.user.id) throw new Error("Need Login");
+
+  // QQQ: check exists
+
   prisma.book.delete({
     where: { id },
   });
+};

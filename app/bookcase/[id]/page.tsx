@@ -1,6 +1,7 @@
 import IconLabel from "@/components/icon-label";
 import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/user-avtar";
+import { auth } from "@/lib/auth";
 import prisma, { findMemberByIdWithCount } from "@/lib/db";
 import {
   AlbumIcon,
@@ -17,7 +18,10 @@ type Props = {
 };
 
 export default function BookcaseNickname({ params }: Props) {
+  const session = use(auth());
+  const isMyBookcase = !!session?.user;
   const { id } = use(params);
+
   const mbr = use(findMemberByIdWithCount(id));
   if (!mbr) return <h1 className="text-2xl">User Not Found</h1>;
 
@@ -52,14 +56,16 @@ export default function BookcaseNickname({ params }: Props) {
         {books.map((book) => (
           <Book key={book.id} book={book} />
         ))}
-        <BookDialog>
-          <Button
-            variant={"ghost"}
-            className="flex w-72 justify-start rounded-full bg-slate-200 font-semibold text-lg hover:bg-slate-300"
-          >
-            <PlusIcon /> Add a Book
-          </Button>
-        </BookDialog>
+        {isMyBookcase && (
+          <BookDialog>
+            <Button
+              variant={"ghost"}
+              className="flex w-72 justify-start rounded-full bg-slate-200 font-semibold text-lg hover:bg-slate-300"
+            >
+              <PlusIcon /> Add a Book
+            </Button>
+          </BookDialog>
+        )}
       </div>
     </div>
   );
