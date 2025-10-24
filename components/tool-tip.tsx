@@ -6,7 +6,7 @@ export default function ToolTip({
   children,
 }: PropsWithChildren<{ content: ReactNode }>) {
   return (
-    <Tooltip open={true}>
+    <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent
         className="bg-red-500"
