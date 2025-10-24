@@ -15,17 +15,18 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useAlerter } from "@/hooks/contexts/alerter";
 import type { BookData } from "@/lib/db";
 import type { ValidError } from "@/lib/validator";
 import { useRouter } from "next/navigation";
-import { useActionState, type PropsWithChildren } from "react";
+import { useActionState, useState, type PropsWithChildren } from "react";
 import { deleteBook, saveBook } from "./book.action";
 
 export default function BookDialog({
   book = {
     id: 0,
     title: "",
-    ispublic: true,
+    ispublic: false,
     withdel: false,
     remark: "",
     member: 0,
@@ -34,38 +35,53 @@ export default function BookDialog({
 }: PropsWithChildren<{
   book?: BookData;
 }>) {
+  const { confirm, alert } = useAlerter();
+
   const router = useRouter();
   // const [ispublic, setPublic] = useState(false);
-  // const [withdel, setWithDel] = useState(false);
+  // const [withdel, setWithdel] = useState(false);
+  const [isOpen, setOpen] = useState(false);
 
   const [validError, save, isPending] = useActionState(
     async (_: ValidError | undefined, formData: FormData) => {
-      // formData.set("ispublic", ispublic ? "on" : "");
-      const err = await saveBook(formData);
-      console.log("💻 - book-dialog.tsx - err:", err);
+      // formData.set('ispublic', ispublic ? 'on' : '');
 
+      formData.set("id", String(book.id));
+      const err = await saveBook(formData);
+      console.log("🚀 ~ err:", err);
       if (err) {
         return err;
       }
 
       router.refresh();
+      setOpen(false);
     },
     undefined,
   );
 
   const remove = async () => {
-    await deleteBook(book.id);
+    const ret = await confirm({ title: "Are u sure??" });
+    if (!ret) return;
+
+    const err = await deleteBook(book.id);
+    if (err) {
+      console.log("Err>>", err.id.errors[0]);
+      await alert({ title: err.id.errors[0], okText: "Confirm" });
+      setOpen(false);
+      return;
+    }
     router.refresh();
+    setOpen(false);
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <form action={save}>
           <DialogHeader>
             <DialogTitle>{book.id ? "Create" : "Edit"} Book</DialogTitle>
-            <DialogDescription>Descriptions...</DialogDescription>
+            <DialogDescription>descript...</DialogDescription>
           </DialogHeader>
 
           <div className="mt-5 space-y-5">
@@ -76,43 +92,45 @@ export default function BookDialog({
               defaultValue={book.title}
             />
 
-            {/* <div className="flex items-center gap-3">
+            {/* <div className='flex items-center gap-3'>
               <Checkbox
-                id="ispublic"
-                name="ispublic"
-                checked={book.ispublic}
-                onCheckedChange={(checked) => setPublic(!!checked)}
+                id='ispublic'
+                name='ispublic'
+                checked={ispublic}
+                onCheckedChange={checked => setPublic(!!checked)}
               />
-              <Label htmlFor="ispublic" className="cursor-pointer">
-                Public {book.ispublic && "XX"}
+              <Label htmlFor='ispublic' className='cursor-pointer'>
+                Public {ispublic && 'XX'}
               </Label>
             </div> */}
             <CheckSwitch
               name="ispublic"
               label="Public Book"
               error={validError}
+              checkValue={book.ispublic}
             />
 
             <CheckSwitch
-              name="withDel"
+              name="withdel"
               label="Open with deletion"
               type="switch"
               error={validError}
+              checkValue={book.withdel}
             />
 
             {/* <div>
-              <div className="flex items-center gap-3">
+              <div className='flex items-center gap-3'>
                 <Switch
-                  id="withdel"
-                  name="withdel"
-                  checked={book.withdel}
-                  onCheckedChange={(checked) => setWithDel(!!checked)}
+                  id='withdel'
+                  name='withdel'
+                  checked={withdel}
+                  onCheckedChange={checked => setWithdel(!!checked)}
                 />
-                <Label htmlFor="withdel">
-                  Open with deletion: {!!validError?.withdel?.value && "xx"}
+                <Label htmlFor='withdel'>
+                  Open with deletion: {!!validError?.withdel?.value && 'xx'}
                 </Label>
               </div>
-              <p className="mt-1 text-red-400 text-sm">
+              <p className='mt-1 text-red-500 text-sm'>
                 {validError?.withdel?.errors[0]}
               </p>
             </div> */}
@@ -125,7 +143,7 @@ export default function BookDialog({
                 Description
               </Label>
               <Textarea
-                placeholder="Description..."
+                placeholder="description..."
                 id="remark"
                 name="remark"
                 defaultValue={book.remark ?? ""}

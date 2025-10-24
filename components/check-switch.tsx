@@ -1,7 +1,7 @@
 "use client";
 
 import type { ValidError } from "@/lib/validator";
-import { useId, useState, type RefObject } from "react";
+import { useEffect, useId, useState, type RefObject } from "react";
 import { Checkbox } from "./ui/checkbox";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -32,30 +32,34 @@ export default function CheckSwitch({
   setCheckedFunction,
 }: Props) {
   const uid = useId();
-  const [checked, setChecked] = useState(checkValue);
-
   const { errors, value } =
     !!error && !!name && error[name] ? error[name] : { errors: [] };
+  const [checked, setChecked] = useState(checkValue || !!value);
+
   const Compo = type === "checkbox" ? Checkbox : Switch;
+
+  useEffect(() => {
+    setChecked(checkValue || !!value);
+  }, [checkValue, value]);
 
   return (
     <div>
       <div className="flex items-center gap-3">
         <Compo
           id={uid}
-          name={type === "checkbox" && !!name ? uid : name || uid}
+          name={(type === "switch" && !!name ? name : null) || uid}
           ref={ref}
-          checked={checked || !!value}
+          checked={checked}
           onCheckedChange={(checked) => {
             setChecked(!!checked);
             if (setCheckedFunction) setCheckedFunction(!!checked);
           }}
         />
 
-        <Label htmlFor={uid} className="cursor-pointer">
+        <Label htmlFor={uid} className="cursor-pointer capitalize">
           {label}
         </Label>
-        {type === "checkbox" && !!name && (
+        {!!name && (
           <Input
             type="hidden"
             name={name}

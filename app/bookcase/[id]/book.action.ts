@@ -2,7 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
-import { validate } from "@/lib/validator";
+import { validate, validateAsync } from "@/lib/validator";
 import z from "zod";
 
 export const saveBook = async (formData: FormData) => {
@@ -10,6 +10,11 @@ export const saveBook = async (formData: FormData) => {
   if (!session?.user || !session.user.id) throw new Error("Need Login");
 
   const member = Number(session.user.id);
+
+  console.log(
+    "🚀 ~ book.action - formData:",
+    Object.fromEntries(formData.entries()),
+  );
 
   const zobj = z
     .object({
@@ -20,18 +25,20 @@ export const saveBook = async (formData: FormData) => {
     })
     .refine(({ ispublic, withdel }) => !ispublic || (ispublic && !withdel), {
       path: ["withdel"],
-      message: "Public book cannot have opening with deletion",
+      message: "Public book cannot have open with deletion!",
     });
 
   const [err, data] = validate(zobj, formData);
-  console.log("💻 - book.action.ts - err, data:", err, data);
+  console.log("💻 - book.action.ts - err:", err);
 
   if (err) return err;
 
   const id = Number(formData.get("id"));
+  const { id: userId, isadmin } = session.user;
+
   if (id) {
     await prisma.book.update({
-      where: { id },
+      where: isadmin ? { id } : { id, member: Number(userId) },
       data: {
         ...data,
         ispublic: data.ispublic === "on",
@@ -55,8 +62,31 @@ export const deleteBook = async (id: number) => {
   if (!session?.user || !session.user.id) throw new Error("Need Login");
 
   // QQQ: check exists
+  const zobj = z
+    .object({
+      id: z.number(),
+    })
+    .superRefine(async ({ id }, ctx) => {
+      const book = await prisma.book.findUnique({
+        where: { id },
+        // where: { id: id + 10000 },
+      });
 
-  prisma.book.delete({
-    where: { id },
+      if (!book) {
+        ctx.addIssue({
+          code: "custom",
+          message: `This Book(#${id}) is not exists!`,
+          path: ["id"],
+        });
+      }
+    });
+
+  const [err] = await validateAsync(zobj, { id });
+  if (err) return err;
+
+  const { id: userId, isadmin } = session.user;
+
+  await prisma.book.delete({
+    where: isadmin ? { id } : { id, member: Number(userId) },
   });
 };
