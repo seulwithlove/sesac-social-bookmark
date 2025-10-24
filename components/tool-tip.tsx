@@ -7,12 +7,12 @@ export default function ToolTip({
 }: PropsWithChildren<{ content: ReactNode }>) {
   return (
     <Tooltip open={true}>
-      <TooltipTrigger asChild>{content}</TooltipTrigger>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent
         className="bg-red-500"
         arrowClassName="fill-red-500 bg-red-500"
       >
-        Open with deletion!
+        {content}
       </TooltipContent>
     </Tooltip>
   );
