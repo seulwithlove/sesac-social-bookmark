@@ -38,6 +38,7 @@ export default function CheckSwitch({
 
   const Compo = type === "checkbox" ? Checkbox : Switch;
 
+  // checkValue prop이 변경될때만 상태 업데이트
   useEffect(() => {
     setChecked(checkValue || !!value);
   }, [checkValue, value]);
@@ -60,11 +61,7 @@ export default function CheckSwitch({
           {label}
         </Label>
         {!!name && (
-          <Input
-            type="hidden"
-            name={name}
-            value={checked || !!value ? "on" : ""}
-          />
+          <Input type="hidden" name={name} value={checked ? "on" : ""} />
         )}
       </div>
       {errors?.map((e) => (

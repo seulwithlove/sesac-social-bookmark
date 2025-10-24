@@ -31,6 +31,7 @@ export default function Book({ id, book }: Props) {
     );
 
   const { title, remark, ispublic, withdel, member } = data;
+
   const session = use(auth());
   const isMine = session?.user.id === String(member);
 

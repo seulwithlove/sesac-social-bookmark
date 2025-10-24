@@ -19,7 +19,12 @@ import { useAlerter } from "@/hooks/contexts/alerter";
 import type { BookData } from "@/lib/db";
 import type { ValidError } from "@/lib/validator";
 import { useRouter } from "next/navigation";
-import { useActionState, useState, type PropsWithChildren } from "react";
+import {
+  useActionState,
+  useEffect,
+  useState,
+  type PropsWithChildren,
+} from "react";
 import { deleteBook, saveBook } from "./book.action";
 
 export default function BookDialog({
@@ -38,14 +43,18 @@ export default function BookDialog({
   const { confirm, alert } = useAlerter();
 
   const router = useRouter();
-  // const [ispublic, setPublic] = useState(false);
-  // const [withdel, setWithdel] = useState(false);
   const [isOpen, setOpen] = useState(false);
+
+  const [ispublic, setPublic] = useState(false);
+  const [withdel, setWithdel] = useState(false);
+
+  useEffect(() => {
+    setPublic(book.ispublic);
+    setWithdel(book.withdel);
+  }, [book.ispublic, book.withdel]);
 
   const [validError, save, isPending] = useActionState(
     async (_: ValidError | undefined, formData: FormData) => {
-      // formData.set('ispublic', ispublic ? 'on' : '');
-
       formData.set("id", String(book.id));
       const err = await saveBook(formData);
       console.log("🚀 ~ err:", err);
@@ -103,11 +112,13 @@ export default function BookDialog({
                 Public {ispublic && 'XX'}
               </Label>
             </div> */}
+
             <CheckSwitch
               name="ispublic"
               label="Public Book"
               error={validError}
-              checkValue={book.ispublic}
+              checkValue={ispublic}
+              setCheckedFunction={setPublic}
             />
 
             <CheckSwitch
@@ -115,7 +126,8 @@ export default function BookDialog({
               label="Open with deletion"
               type="switch"
               error={validError}
-              checkValue={book.withdel}
+              checkValue={withdel}
+              setCheckedFunction={setWithdel}
             />
 
             {/* <div>
