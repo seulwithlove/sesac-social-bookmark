@@ -14,7 +14,8 @@ const mbrs = [
             create: {
               link: "https://github.com",
               title: "Github",
-              descript: "seeding...",
+              maker: 1,
+              descript: "seed data",
             },
           },
         },
