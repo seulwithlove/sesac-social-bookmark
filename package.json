@@ -12,6 +12,7 @@
     "db:seed": "dotenv -e .env.local prisma db seed",
     "db:push": "dotenv -e .env.local prisma db push",
     "db:mig": "dotenv -e .env.local prisma migrate dev",
+    "db:migafter": "dotenv -e .env.local tsx prisma/after_mig.ts",
     "db:reset": "dotenv -e .env.local prisma migrate reset",
     "db:gen": "dotenv -e .env.local prisma generate"
   },
@@ -54,6 +55,7 @@
     "recharts": "2.15.4",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
+    "tsx": "^4.20.6",
     "uuid": "^13.0.0",
     "vaul": "^1.1.2",
     "zod": "^4.1.3"

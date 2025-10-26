@@ -23,7 +23,7 @@ export default function IconLabel({
       isDanger && "text-destructive",
       isActive && "fill-primary",
       { "mr-1": !!noti, "mr-[.2rem]": !!children || children === 0 },
-      icon.props.className,
+      icon.props?.className,
     ),
     size: size ?? (noti ? 28 : 20),
   });
@@ -35,7 +35,7 @@ export default function IconLabel({
         <small
           className={cn(
             "absolute top-0 right-0 min-w-5 rounded-full p-0 text-center text-sm text-white tracking-tighter ring-1",
-            `translate-x-2.5 translate-y-[-0.4rem]`,
+            `translate-x-2 translate-y-[-0.4rem]`,
             {
               "bg-primary": noti === "default",
               "bg-muted": noti === "muted",

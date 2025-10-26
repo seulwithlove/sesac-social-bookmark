@@ -60,20 +60,22 @@ export default function BookcaseNickname({ params }: Props) {
       </h1>
 
       <div className="flex gap-3 overflow-x-scroll py-2">
-        {books.map((book) => (
-          <Book key={book.id} book={book} />
-        ))}
+        <div className="flex gap-3 py-2">
+          {books.map((book) => (
+            <Book key={book.id} book={book} />
+          ))}
 
-        {isMyBookcase && (
-          <BookDialog>
-            <Button
-              variant={"ghost"}
-              className="flex w-60 justify-start rounded-full bg-slate-200 text-lg hover:bg-slate-300 dark:bg-muted dark:hover:bg-muted-foreground/30"
-            >
-              <PlusIcon /> Add a Book
-            </Button>
-          </BookDialog>
-        )}
+          {isMyBookcase && (
+            <BookDialog>
+              <Button
+                variant={"ghost"}
+                className="flex w-60 justify-start rounded-full bg-slate-200 font-semibold text-lg hover:bg-muted-foreground/30 dark:bg-muted dark:hover:bg-muted-foreground/30"
+              >
+                <PlusIcon /> Add a Book
+              </Button>
+            </BookDialog>
+          )}
+        </div>
       </div>
     </div>
   );

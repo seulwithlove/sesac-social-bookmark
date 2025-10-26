@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import type { JSX, PropsWithChildren } from "react";
 import IconLabel from "./icon-label";
