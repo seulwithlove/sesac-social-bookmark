@@ -10,6 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
   CircleAlertIcon,
@@ -17,7 +18,13 @@ import {
   OctagonXIcon,
   TriangleAlertIcon,
 } from "lucide-react";
-import { createContext, type PropsWithChildren, use, useState } from "react";
+import {
+  createContext,
+  type PropsWithChildren,
+  use,
+  useRef,
+  useState,
+} from "react";
 
 type AlertType = "confirm" | "alert" | "prompt";
 
@@ -28,6 +35,7 @@ type Options = {
   type?: AlertType;
   cancelText?: string;
   variant?: "default" | "destructive";
+  placeholder?: string;
 };
 
 type ContextValueProps = {
@@ -46,8 +54,9 @@ export function AlerterProvider({ children }: PropsWithChildren) {
   const [isOpen, setOpen] = useState(false);
   const [options, setOptions] = useState<Options>();
   const [resolver, setResolver] = useState<(value: string) => void>(() => {});
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  //   type     destructive       default
+  // type        destructive     default
   // --------------------------------------------
   // confirm     Triangle        CircleAlert
   // alert       Octagon-X       CircleAlert
@@ -72,7 +81,7 @@ export function AlerterProvider({ children }: PropsWithChildren) {
     });
 
   // 먼저 close되고 0.1초 후 promise 실행하여 도시에 2개의 AlertDialog가 뜨는 걸 방지한다!
-  const makeResolver = (value: string) => setTimeout(resolver, 1000, value);
+  const makeResolver = (value: string) => setTimeout(resolver, 100, value);
 
   const confirm = (options: Options) => setup(options, "confirm");
   const alert = (options: Options) => setup(options, "alert");
@@ -99,6 +108,15 @@ export function AlerterProvider({ children }: PropsWithChildren) {
               </AlertDialogDescription>
             )}
           </AlertDialogHeader>
+
+          {options?.type === "prompt" && (
+            <Input
+              type="text"
+              ref={inputRef}
+              placeholder={options?.placeholder}
+            />
+          )}
+
           <AlertDialogFooter>
             {options?.type !== "alert" && (
               <AlertDialogCancel onClick={() => makeResolver("")}>
@@ -106,13 +124,20 @@ export function AlerterProvider({ children }: PropsWithChildren) {
               </AlertDialogCancel>
             )}
             <AlertDialogAction
-              onClick={() => makeResolver("OK")}
+              onClick={() =>
+                makeResolver(
+                  options?.type === "prompt"
+                    ? (inputRef.current?.value ?? "")
+                    : "OK",
+                )
+              }
               className={cn(
                 options?.variant === "destructive" &&
                   "bg-destructive hover:bg-destructive/90 dark:bg-destructive/60",
               )}
             >
-              {options?.okText ?? "Continue"}
+              {options?.okText ??
+                (options?.type === "alert" ? "Confirm" : "Continue")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

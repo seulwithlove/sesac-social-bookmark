@@ -19,7 +19,6 @@ type Props = {
 
 /**
  * @ usage <CheckSwitch type='switch' name='' label='xx' />
- *
  */
 
 export default function CheckSwitch({
@@ -32,16 +31,20 @@ export default function CheckSwitch({
   setCheckedFunction,
 }: Props) {
   const uid = useId();
+
   const { errors, value } =
     !!error && !!name && error[name] ? error[name] : { errors: [] };
   const [checked, setChecked] = useState(checkValue || !!value);
 
   const Compo = type === "checkbox" ? Checkbox : Switch;
 
-  // checkValue prop이 변경될때만 상태 업데이트
+  // biome-ignore lint/correctness/useExhaustiveDependencies: value not changed when 'on'
   useEffect(() => {
-    setChecked(checkValue || !!value);
-  }, [checkValue, value]);
+    console.log("value", value);
+    if (value) setChecked(true);
+  }, [error]);
+
+  console.log("💻 - check-switch.tsx - value:", value);
 
   return (
     <div>
@@ -56,16 +59,15 @@ export default function CheckSwitch({
             if (setCheckedFunction) setCheckedFunction(!!checked);
           }}
         />
-
-        <Label htmlFor={uid} className="cursor-pointer capitalize">
+        <Label htmlFor={uid} className="cursor-pointer">
           {label}
         </Label>
-        {!!name && (
+        {type === "checkbox" && !!name && (
           <Input type="hidden" name={name} value={checked ? "on" : ""} />
         )}
       </div>
       {errors?.map((e) => (
-        <p key={e} className="mt-1 text-red-400 text-sm">
+        <p key={e} className="mt-1 text-red-500 text-sm">
           {e}
         </p>
       ))}

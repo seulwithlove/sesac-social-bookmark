@@ -19,12 +19,7 @@ import { useAlerter } from "@/hooks/contexts/alerter";
 import type { BookData } from "@/lib/db";
 import type { ValidError } from "@/lib/validator";
 import { useRouter } from "next/navigation";
-import {
-  useActionState,
-  useEffect,
-  useState,
-  type PropsWithChildren,
-} from "react";
+import { useActionState, useState, type PropsWithChildren } from "react";
 import { deleteBook, saveBook } from "./book.action";
 
 export default function BookDialog({
@@ -40,24 +35,20 @@ export default function BookDialog({
 }: PropsWithChildren<{
   book?: BookData;
 }>) {
-  const { confirm, alert } = useAlerter();
+  const { confirm, alert, prompt } = useAlerter();
 
   const router = useRouter();
+  // const [ispublic, setPublic] = useState(false);
+  // const [withdel, setWithdel] = useState(false);
   const [isOpen, setOpen] = useState(false);
-
-  const [ispublic, setPublic] = useState(false);
-  const [withdel, setWithdel] = useState(false);
-
-  useEffect(() => {
-    setPublic(book.ispublic);
-    setWithdel(book.withdel);
-  }, [book.ispublic, book.withdel]);
 
   const [validError, save, isPending] = useActionState(
     async (_: ValidError | undefined, formData: FormData) => {
+      // formData.set('ispublic', ispublic ? 'on' : '');
+
       formData.set("id", String(book.id));
       const err = await saveBook(formData);
-      console.log("🚀 ~ err:", err);
+      // console.log("🚀 ~ err:", err);
       if (err) {
         return err;
       }
@@ -71,6 +62,17 @@ export default function BookDialog({
   const remove = async () => {
     const ret = await confirm({ title: "Are u sure??" });
     if (!ret) return;
+
+    const code = await prompt({
+      title: "Input the code?",
+      description: "Input the code to delete this book",
+      placeholder: "code...",
+    });
+
+    if (code !== "1234") {
+      await alert({ title: "Not valide code!", variant: "destructive" });
+      return;
+    }
 
     const err = await deleteBook(book.id);
     if (err) {
@@ -112,13 +114,11 @@ export default function BookDialog({
                 Public {ispublic && 'XX'}
               </Label>
             </div> */}
-
             <CheckSwitch
               name="ispublic"
               label="Public Book"
               error={validError}
-              checkValue={ispublic}
-              setCheckedFunction={setPublic}
+              checkValue={book.ispublic}
             />
 
             <CheckSwitch
@@ -126,8 +126,7 @@ export default function BookDialog({
               label="Open with deletion"
               type="switch"
               error={validError}
-              checkValue={withdel}
-              setCheckedFunction={setWithdel}
+              checkValue={book.withdel}
             />
 
             {/* <div>

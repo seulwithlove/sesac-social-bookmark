@@ -11,10 +11,7 @@ export const saveBook = async (formData: FormData) => {
 
   const member = Number(session.user.id);
 
-  console.log(
-    "🚀 ~ book.action - formData:",
-    Object.fromEntries(formData.entries()),
-  );
+  console.log("🚀 ~ formData:", Object.fromEntries(formData.entries()));
 
   const zobj = z
     .object({
@@ -29,8 +26,7 @@ export const saveBook = async (formData: FormData) => {
     });
 
   const [err, data] = validate(zobj, formData);
-  console.log("💻 - book.action.ts - err:", err);
-
+  console.log("🚀 ~ err:", err, data);
   if (err) return err;
 
   const id = Number(formData.get("id"));
@@ -61,7 +57,6 @@ export const deleteBook = async (id: number) => {
   const session = await auth();
   if (!session?.user || !session.user.id) throw new Error("Need Login");
 
-  // QQQ: check exists
   const zobj = z
     .object({
       id: z.number(),

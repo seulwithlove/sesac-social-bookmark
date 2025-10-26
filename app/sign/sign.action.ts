@@ -112,10 +112,10 @@ export const authorize = async (
 /**
  * 📌 logout - 로그아웃
  *
- * NextAuth signOut()을 호출하여 세션 삭제 및 로그인 페이지로 리다이렉트
+ * NextAuth signOut()을 호출하여 세션 삭제 및 메인페이지로 리다이렉트
  */
 export const logout = async () => {
-  await signOut({ redirectTo: "/sign" }); // QQQ: '/'
+  await signOut({ redirectTo: "/" });
 };
 
 /**

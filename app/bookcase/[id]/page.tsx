@@ -24,10 +24,17 @@ export default function BookcaseNickname({ params }: Props) {
   const mbr = use(findMemberByIdWithCount(id));
   if (!mbr) return <h1 className="text-2xl">User Not Found</h1>;
 
+  // 1 query로 Mark db까지 다 읽어오면 따로 Mark를 읽지 않아도 됨
   const books = use(
     prisma.book.findMany({
       where: { member: Number(id) },
-      include: { Mark: true },
+      include: {
+        Mark: {
+          include: {
+            _count: { select: { Likes: true, Report: true, Talk: true } },
+          },
+        },
+      },
     }),
   );
 
@@ -43,7 +50,7 @@ export default function BookcaseNickname({ params }: Props) {
         </div>
         <span className="flex gap-3 text-lg">
           <IconLabel icon={<BookMarkedIcon />}>{mbr._count.Book}</IconLabel>
-          <IconLabel icon={<AlbumIcon />} noti="primary">
+          <IconLabel icon={<AlbumIcon />} noti="muted">
             {mbr._count.Mark}
           </IconLabel>
           <IconLabel icon={<HeartPlusIcon />} noti="destructive">
@@ -61,7 +68,7 @@ export default function BookcaseNickname({ params }: Props) {
           <BookDialog>
             <Button
               variant={"ghost"}
-              className="flex w-72 justify-start rounded-full bg-slate-200 font-semibold text-lg hover:bg-slate-300"
+              className="flex w-60 justify-start rounded-full bg-slate-200 text-lg hover:bg-slate-300 dark:bg-muted dark:hover:bg-muted-foreground/30"
             >
               <PlusIcon /> Add a Book
             </Button>
