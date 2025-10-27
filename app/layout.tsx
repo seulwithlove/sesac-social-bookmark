@@ -1,5 +1,6 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import { AlerterProvider } from "@/hooks/contexts/alerter";
+import { StoreProvider } from "@/hooks/contexts/store";
 import { auth } from "@/lib/auth";
 import { BookMarkedIcon } from "lucide-react";
 import type { Metadata } from "next";
@@ -54,7 +55,11 @@ export default async function RootLayout({
 
                   <Nav />
                 </header>
-                <main className="flex-1 overflow-auto px-2">{children}</main>
+
+                <StoreProvider>
+                  <main className="flex-1 overflow-auto px-2">{children}</main>
+                </StoreProvider>
+
                 <footer className="text-center text-green-500">
                   &#169; seulwithlove 2025
                 </footer>
