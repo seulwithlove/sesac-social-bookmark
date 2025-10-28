@@ -1,6 +1,7 @@
 "use client";
 
 import { likesAndReports } from "@/app/bookcase/[id]/book.action";
+import type { MarkAllColumn } from "@/lib/db";
 import { useSession } from "next-auth/react";
 import {
   createContext,
@@ -14,13 +15,15 @@ import {
 type ContextValueProps = {
   iLikedMarks: number[];
   iReportedMarks: number[];
-  // setMarks: (likes: number[], reports: number[]) => void;
+  toggleLikes: (mark: number) => void;
+  toggleReports: (mark: number) => void;
 };
 
 const StoreContext = createContext<ContextValueProps>({
   iLikedMarks: [],
   iReportedMarks: [],
-  // setMarks: () => {},
+  toggleLikes: () => {},
+  toggleReports: () => {},
 });
 
 export function StoreProvider({ children }: PropsWithChildren) {
@@ -35,16 +38,21 @@ export function StoreProvider({ children }: PropsWithChildren) {
     setReportedMarks(reports);
   }, []);
 
-  const toggleLikes = (mark: number) => {
-    if (iLikedMarks.includes(mark))
-      setLikedMarks(iLikedMarks.filter((id) => id !== mark));
-    else setLikedMarks([...iLikedMarks, mark]);
+  const toggleLikesOrReports = (mark: MarkAllColumn, type: "likes" | "reports") => {
+    const [state, setState] =
+      type === "likes"
+        ? [iLikedMarks, setLikedMarks]
+        : [iReportedMarks, setReportedMarks];
+
+    const hasNow = state.includes(mark.id);
+    if (hasNow) setState(state.filter((id) => id !== mark.id));
+    else setState([...state, mark.id]);
+
+    mark._count.Likes += hasNow ? -1 : 1;
   };
-  const toggleReport = (mark: number) => {
-    if (iReportedMarks.includes(mark))
-      setLikedMarks(iReportedMarks.filter((id) => id !== mark));
-    else setReportedMarks([...iReportedMarks, mark]);
-  };
+
+  const toggleLikes = (mark: number) => toggleLikesOrReports(mark, "likes");
+  const toggleReports = (mark: number) => toggleLikesOrReports(mark, "reports");
 
   useEffect(() => {
     if (session?.user) {
@@ -59,7 +67,9 @@ export function StoreProvider({ children }: PropsWithChildren) {
   }, [session?.user, setMarks]);
 
   return (
-    <StoreContext.Provider value={{ iLikedMarks, iReportedMarks }}>
+    <StoreContext.Provider
+      value={{ iLikedMarks, iReportedMarks, toggleLikes, toggleReports }}
+    >
       {children}
     </StoreContext.Provider>
   );

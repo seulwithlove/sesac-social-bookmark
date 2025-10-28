@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { MouseEvent } from "react";
 import { deleteMark } from "./book.action";
 
 export default function Mark({
@@ -26,9 +27,21 @@ export default function Mark({
   bookOwner: number;
   withdel: boolean;
 }) {
-  const { iLikedMarks, iReportedMarks } = useStore();
+  const { iLikedMarks, iReportedMarks, toggleLikes, toggleReports } = useStore();
   const router = useRouter();
   const { alert } = useAlerter();
+
+  const likeMark = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleLikes(mark);
+  };
+
+  const reportMark = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleReports(mark);
+  };
 
   const openLinkTrigger = async () => {
     // 좋아요 한 마크는 바로삭제에서 제외!
@@ -65,11 +78,12 @@ export default function Mark({
 
           <div className="flex flex-col overflow-hidden [&>*]:truncate">
             <h1 className="text-lg dark:text-black/70" title={mark.title}>
+              {process.env.NODE_ENV === "development" && (
+                <small className="text-muted-foreground">{mark.id} </small>
+              )}
               {mark.title}
             </h1>
-            <small className="text-muted-foreground">
-              {mark.descript || mark.title}
-            </small>
+            <small className="text-muted-foreground">{mark.descript || mark.title}</small>
             <small className="text-muted-foreground underline-offset-2 group-hover:underline">
               {mark.link}
             </small>
@@ -79,6 +93,7 @@ export default function Mark({
         <div className="flex items-center justify-between text-sm">
           <IconLabelButton
             icon={<ThumbsUpIcon />}
+            onClick={likeMark}
             isActive={iLikedMarks.includes(mark.id)}
           >
             {mark._count.Likes}
@@ -88,6 +103,7 @@ export default function Mark({
           </IconLabelButton>
           <IconLabelButton
             icon={<HatGlassesIcon />}
+            onClick={reportMark}
             isDanger
             isActive={iReportedMarks.includes(mark.id)}
           >

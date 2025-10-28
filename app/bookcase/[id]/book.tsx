@@ -25,19 +25,14 @@ export default function Book({ id, book }: Props) {
   const data = book ? book : use(findBookWithMarkById(id));
   if (!data)
     return (
-      <h1 className="font-semibold text-lg text-muted-foreground">
-        Book is not Found!
-      </h1>
+      <h1 className="font-semibold text-lg text-muted-foreground">Book is not Found!</h1>
     );
 
-  const { title, remark, ispublic, withdel, member } = data;
+  const { id: bookId, title, remark, ispublic, withdel, member } = data;
   const session = use(auth());
   const isMine = session?.user.id === String(member);
 
-  const totalLikesCnt = book?.Mark.reduce(
-    (acc, mark) => acc + mark._count.Likes,
-    0,
-  );
+  const totalLikesCnt = book?.Mark.reduce((acc, mark) => acc + mark._count.Likes, 0);
 
   return (
     <div className="flex h-full w-72 flex-shrink-0 flex-col rounded-lg bg-slate-200 pl-2 dark:bg-muted">
@@ -51,6 +46,9 @@ export default function Book({ id, book }: Props) {
           )}
           title={remark || title}
         >
+          {process.env.NODE_ENV === "development" && (
+            <small className="text-muted-foreground">{bookId} </small>
+          )}
           {!ispublic && <BookKeyIcon />} {title}
         </h1>
 
