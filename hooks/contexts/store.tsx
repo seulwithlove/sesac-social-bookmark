@@ -25,15 +25,26 @@ const StoreContext = createContext<ContextValueProps>({
 
 export function StoreProvider({ children }: PropsWithChildren) {
   const [iLikedMarks, setLikedMarks] = useState<number[]>([]);
-  const [iReportedMarks, setRepotedMarks] = useState<number[]>([]);
+  const [iReportedMarks, setReportedMarks] = useState<number[]>([]);
   const { data: session } = useSession();
 
   const setMarks = useCallback((likes: number[], reports: number[]) => {
     // console.log('🚀 ~ likes/reports:', likes, reports);
 
     setLikedMarks(likes);
-    setRepotedMarks(reports);
+    setReportedMarks(reports);
   }, []);
+
+  const toggleLikes = (mark: number) => {
+    if (iLikedMarks.includes(mark))
+      setLikedMarks(iLikedMarks.filter((id) => id !== mark));
+    else setLikedMarks([...iLikedMarks, mark]);
+  };
+  const toggleReport = (mark: number) => {
+    if (iReportedMarks.includes(mark))
+      setLikedMarks(iReportedMarks.filter((id) => id !== mark));
+    else setReportedMarks([...iReportedMarks, mark]);
+  };
 
   useEffect(() => {
     if (session?.user) {
