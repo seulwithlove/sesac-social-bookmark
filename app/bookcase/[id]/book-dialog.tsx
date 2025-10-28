@@ -48,7 +48,7 @@ export default function BookDialog({
 
       formData.set("id", String(book.id));
       const err = await saveBook(formData);
-      // console.log("🚀 ~ err:", err);
+      console.log("🚀 book-dialog.err:", err);
       if (err) {
         return err;
       }
@@ -70,7 +70,7 @@ export default function BookDialog({
     });
 
     if (code !== "1234") {
-      await alert({ title: "Not valide code!", variant: "destructive" });
+      await alert({ title: "Not valid code!", variant: "destructive" });
       return;
     }
 
