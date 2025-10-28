@@ -93,7 +93,7 @@ export const comparePassword = (
 
 // validate filepath
 export const existsFile = (filePath: string | undefined | null) => {
-  if (!filePath) return filePath;
+  if (!filePath || filePath.startsWith("http")) return filePath;
 
   const fullPath = path.join(process.cwd(), "public", filePath);
   return existsSync(fullPath) ? filePath : null;
