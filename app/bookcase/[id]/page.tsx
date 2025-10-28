@@ -53,7 +53,7 @@ export default function BookcaseNickname({ params }: Props) {
           <IconLabel icon={<AlbumIcon />} noti="muted">
             {mbr._count.Mark}
           </IconLabel>
-          <IconLabel icon={<HeartPlusIcon />} noti="destructive">
+          <IconLabel icon={<HeartPlusIcon className="text-red-400"/>} noti="destructive">
             50
           </IconLabel>
         </span>

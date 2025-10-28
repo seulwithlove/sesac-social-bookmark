@@ -37,8 +37,8 @@ export default function IconLabel({
             "absolute top-0 right-0 min-w-5 rounded-full p-0 text-center text-sm text-white tracking-tighter ring-1",
             `translate-x-2 translate-y-[-0.4rem]`,
             {
-              "bg-primary": noti === "default",
-              "bg-muted": noti === "muted",
+              "bg-primary-foreground": noti === "default",
+              "bg-muted-foreground": noti === "muted",
               "bg-destructive": noti === "destructive",
               "bg-green-500": noti === "success",
             },
