@@ -33,6 +33,7 @@ model FollowBook {
   Book      Book     @relation(fields: [book], references: [id], onDelete: Cascade, map: "fk_FollowBook_book")
   Member    Member?  @relation(fields: [member], references: [id], map: "fk_FollowBook_member")
 
+  @@unique([book, member])
   @@index([book], map: "fk_FollowBook_book")
   @@index([member], map: "fk_FollowBook_member")
 }
