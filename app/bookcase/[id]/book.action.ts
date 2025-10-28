@@ -93,12 +93,12 @@ export const deleteBook = async (id: number) => {
 export const likesAndReports = async (member: number) => {
   const ilikes = await prisma.likes.findMany({
     where: { member },
-    select: { id: true },
+    select: { mark: true },
   });
 
   const ireports = await prisma.report.findMany({
     where: { member },
-    select: { id: true },
+    select: { mark: true },
   });
 
   return [ilikes, ireports];

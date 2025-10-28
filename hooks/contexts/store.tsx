@@ -38,11 +38,10 @@ export function StoreProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     if (session?.user) {
       likesAndReports(Number(session.user.id)).then((res) => {
-        // [ [{id: 1}, {id: 2}], [{id: 1}] ]
         const [likes, reports] = res;
         setMarks(
-          likes.map(({ id }) => id),
-          reports.map(({ id }) => id),
+          likes.map(({ mark }) => mark),
+          reports.map(({ mark }) => mark),
         );
       });
     }
