@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useOptimistic, useTransition, type MouseEvent } from "react";
 import { deleteMark, toggleLikesOrReportMark } from "./book.action";
+import MarkDialog from "./mark-dialog";
 
 export default function Mark({
   mark,
@@ -196,7 +197,9 @@ export default function Mark({
                 isDanger
                 disabled={isRemovePending}
               />
-              <IconLabelButton icon={<MoreHorizontalIcon />} />
+              <MarkDialog mark={mark}>
+                <IconLabelButton icon={<MoreHorizontalIcon />} />
+              </MarkDialog>
             </>
           )}
         </div>

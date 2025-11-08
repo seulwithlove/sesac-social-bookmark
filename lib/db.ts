@@ -63,10 +63,7 @@ export const findMemberByIdWithCount = async (id: number | string) =>
 
 // book
 export type BookAllColumn = Awaited<ReturnType<typeof findBookWithMarkById>>;
-export type BookData = Omit<
-  NonNullable<BookAllColumn>,
-  "Mark" | "FollowBook" | "createdAt" | "updatedAt"
->;
+export type BookData = Omit<NonNullable<BookAllColumn>, "Mark" | "FollowBook" | DT>;
 
 export const findBookById = async (id: number) =>
   prisma.book.findUnique({
@@ -90,9 +87,12 @@ export const findBookWithMarkById = async (id: number) =>
     },
   });
 
+type DT = "createdAt" | "updatedAt";
+
 // mark
+type MarkRefs = "Likes" | "Report" | "Member" | "Talk";
 export type MarkAllColumn = NonNullable<Awaited<ReturnType<typeof findMarkWithCount>>>;
-export type MarkData = Omit<MarkAllColumn, "_count" | "createdAt" | "updatedAt">;
+export type MarkData = Omit<MarkAllColumn, "_count" | DT | MarkRefs>;
 
 export const findMarkWithCount = async (id: number) =>
   prisma.mark.findUnique({

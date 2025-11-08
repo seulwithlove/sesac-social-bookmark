@@ -76,6 +76,55 @@ export const saveBook = async (formData: FormData) => {
   }
 };
 
+export const saveMark = async (formData: FormData) => {
+  const { id: userId, isadmin } = await checkLogin();
+  const maker = Number(userId); // book의 주인이 아니어도 추가가능
+  console.log("🚀 ~ formData:", Object.fromEntries(formData.entries()));
+
+  // check book owner & if book is present
+  const bookId = Number(formData.get("book"));
+  const book = await prisma.book.findUnique({
+    where: { id: bookId },
+  });
+  // if(!book) return {bookP:{errors:[]}} // 여기서 리턴하면 안됨! : 왜냐면  아래 value를 전달할수가 없음
+
+  const zobj = z
+    .object({
+      link: z.string().min(1).max(1024),
+      title: z.string().min(1).max(120),
+      image: z.string().optional(),
+      descript: z.string().optional(),
+    })
+    .refine(() => !!book, {
+      path: ["book"],
+      message: "This book is not exists!",
+    });
+
+  const [err, data] = validate(zobj, formData);
+  // console.log('🚀 ~ err:', err, data);
+  // * `!book?.id` is for TS
+  if (err && !book?.id) return err;
+
+  const id = Number(formData.get("id"));
+  const isBookOwner = book.member === maker;
+
+  if (id) {
+    await prisma.mark.update({
+      where: isadmin || isBookOwner ? { id } : { id, maker },
+      data,
+    });
+  } else {
+    await prisma.mark.create({
+      data: {
+        ...data,
+        book: book.id,
+        maker,
+      },
+    });
+  }
+  revalidateTag(`member-books-${maker}`);
+};
+
 const checkLogin = async () => {
   const session = await auth();
   if (!session?.user || !session.user.id) throw new Error("Need Login");
@@ -130,6 +179,14 @@ export const likesAndReports = async (member: number) => {
   return [ilikes, ireports];
 };
 
+export const deleteMarkWithBookId = async (markId: number, bookId: number) => {
+  const book = await prisma.book.findUnique({
+    where: { id: bookId },
+  });
+  if (!book) throw new Error(`This Book(#${bookId}) is not exists!`);
+
+  return deleteMark(markId, book.member);
+};
 export const deleteMark = async (id: number, bookOwner: number) => {
   const { id: userId, isadmin } = await checkLogin();
   console.log("🚀 ~ userId:", userId, id, bookOwner);
@@ -139,6 +196,8 @@ export const deleteMark = async (id: number, bookOwner: number) => {
     where: { id },
   });
   if (!mark) throw new Error(`This Mark(#${id}) is not exists!`);
+
+  const bookOnwerId = bookOwner || (await prisma.book);
 
   if (!isadmin && Number(userId) !== bookOwner && mark.maker !== Number(userId))
     throw new Error(`You have not authentication!`);

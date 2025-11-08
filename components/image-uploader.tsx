@@ -1,19 +1,22 @@
 "use client";
 
 import type { UpdateProfileImageReturn } from "@/app/sign/sign.action";
-import { cn, DummyProfile } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import Image, { type StaticImageData } from "next/image";
 import { useRouter } from "next/navigation";
 import { type ChangeEvent, type FormEvent, useRef, useState, useTransition } from "react";
+import Img from "./ui/img";
 
 type Props = {
-  src: string | StaticImageData;
+  // src: string | StaticImageData;
+  src: string | Blob | undefined;
   alt?: string;
-  changeImage?: (formData: FormData) => UpdateProfileImageReturn;
+  // changeImage?: (formData: FormData) => UpdateProfileImageReturn;
+  changeImage?: (formData: FormData) => unknown;
+  isNotProfile?: boolean;
 };
 
-export default function ImageUploader({ src, alt, changeImage }: Props) {
+export default function ImageUploader({ src, alt, changeImage, isNotProfile }: Props) {
   const { update } = useSession();
   const router = useRouter();
 
@@ -54,18 +57,26 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
       // console.log("💻 - image-uploader.tsx - ent:", ent);
 
       if (!changeImage) return;
-      const [err, mbr] = await changeImage(formData);
-      if (err) {
-        // return console.log("Error>>", err);
-        setImg(src);
-        if (typeof err.image === "object" && err.image?.errors.length)
-          setErrorMsgs(err.image.errors);
-        return;
+      if (isNotProfile) {
+        changeImage(formData);
+      } else {
+        const [err, mbr] = (await changeImage(
+          formData,
+        )) as Awaited<UpdateProfileImageReturn>;
+
+        if (err) {
+          setImg(src);
+          if (typeof err.image === "object" && err.image?.errors.length)
+            setErrorMsgs(err.image.errors);
+          return;
+        }
+        await update(mbr);
       }
-      await update(mbr);
       router.refresh(); // 이미지가 같이 바뀌어야하기때문에 : 꼭 필요할때만 사용!
     });
   };
+
+  const DummyImage = `https://avatar.vercel.sh/${alt || ""}`;
 
   return (
     <form onSubmit={submitHandler} ref={formRef} className="w-full">
@@ -94,14 +105,12 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
           { "border-blue-500 border-dotted": isDragging },
         )}
       >
-        <Image
+        <Img
           src={img}
           alt={alt || ""}
           onClick={() => fileRef.current?.click()}
-          className="rounded-full border"
-          fill
-          unoptimized={process.env.NODE_ENV === "development"}
-          onError={() => setImg(DummyProfile)}
+          className="w-full rounded-full border object-fill"
+          onError={() => setImg(DummyImage)}
         />
 
         <input

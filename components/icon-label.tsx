@@ -38,7 +38,7 @@ export default function IconLabel({
       {noti ? (
         <small
           className={cn(
-            "absolute top-0 right-0 min-w-5 rounded-full p-0 text-center text-sm text-white tracking-tighter ring-1",
+            "absolute top-0 right-0 min-w-4 rounded-full p-0 text-center text-white text-xs tracking-tighter ring-1",
             `translate-x-${Math.min(transX, 5)} translate-y-[-.4rem]`,
             {
               "bg-primary-foreground": noti === "default",

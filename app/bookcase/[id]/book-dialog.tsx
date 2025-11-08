@@ -91,7 +91,7 @@ export default function BookDialog({
       <DialogContent>
         <form action={save}>
           <DialogHeader>
-            <DialogTitle>{book.id ? "Create" : "Edit"} Book</DialogTitle>
+            <DialogTitle>{book.id ? "Edit" : "Create"} Book</DialogTitle>
             <DialogDescription>descript...</DialogDescription>
           </DialogHeader>
 
@@ -147,10 +147,7 @@ export default function BookDialog({
             </div> */}
 
             <div className="flex flex-col">
-              <Label
-                htmlFor="remark"
-                className="font-semibold text-sm capitalize"
-              >
+              <Label htmlFor="remark" className="font-semibold text-sm capitalize">
                 Description
               </Label>
               <Textarea
