@@ -3,7 +3,31 @@
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { validate, validateAsync } from "@/lib/validator";
+import { revalidateTag, unstable_cache } from "next/cache";
 import z from "zod";
+
+export const getAllBooksByMember = async (member: number) =>
+  unstable_cache(
+    () => {
+      console.log("******* getAllBooksByMember>>", member);
+      return prisma.book.findMany({
+        where: { member },
+        include: {
+          FollowBook: { select: { member: true } },
+          Mark: {
+            include: {
+              Likes: { select: { member: true } },
+              Report: { select: { member: true } },
+              Talk: true,
+              Member: { select: { id: true, image: true, nickname: true } },
+            },
+          },
+        },
+      });
+    },
+    [`member-books-${member}`], // ! cache-key
+    { tags: [`member-books-${member}`] }, // options
+  )();
 
 export const saveBook = async (formData: FormData) => {
   const user = await checkLogin();
@@ -25,7 +49,7 @@ export const saveBook = async (formData: FormData) => {
     });
 
   const [err, data] = validate(zobj, formData);
-  console.log("🚀 ~ err:", err, data);
+  // console.log('🚀 ~ err:', err, data);
   if (err) return err;
 
   const id = Number(formData.get("id"));
@@ -59,6 +83,8 @@ const checkLogin = async () => {
 };
 
 export const deleteBook = async (id: number) => {
+  // const session = await auth();
+  // if (!session?.user || !session.user.id) throw new Error('Need Login');
   const user = await checkLogin();
 
   const zobj = z
@@ -106,11 +132,13 @@ export const likesAndReports = async (member: number) => {
 
 export const deleteMark = async (id: number, bookOwner: number) => {
   const { id: userId, isadmin } = await checkLogin();
-  console.log("💻 - book.action.ts - userId:", userId, id, bookOwner);
+  console.log("🚀 ~ userId:", userId, id, bookOwner);
 
   // check exists
-  const mark = await prisma.mark.findUnique({ where: { id } });
-  if (!mark) throw new Error(`This is Mark(#${id})is not exitsts!`);
+  const mark = await prisma.mark.findUnique({
+    where: { id },
+  });
+  if (!mark) throw new Error(`This Mark(#${id}) is not exists!`);
 
   if (!isadmin && Number(userId) !== bookOwner && mark.maker !== Number(userId))
     throw new Error(`You have not authentication!`);
@@ -118,4 +146,59 @@ export const deleteMark = async (id: number, bookOwner: number) => {
   await prisma.mark.delete({
     where: { id },
   });
+  revalidateTag(`member-books-${bookOwner}`);
+};
+
+export const toggleLikesOrReportMark = async (
+  mark: number,
+  type: "likes" | "reports",
+  bookOwner: number,
+) => {
+  const { id: userId } = await checkLogin();
+  const member = Number(userId);
+
+  const data = { mark, member };
+  const where = { where: data };
+  const whereMarkMember = { where: { mark_member: data } };
+
+  // await new Promise((resolve) => setTimeout(resolve, 2000));
+  // if (mark === 4) throw new Error("XXXXXXXXXX");
+
+  // select count(*) from Likes where mark = mark and member=userId
+  const likesCnt = await (type === "likes"
+    ? prisma.likes.count(where)
+    : prisma.report.count(where));
+
+  if (likesCnt > 0) {
+    type === "likes"
+      ? await prisma.likes.delete(whereMarkMember)
+      : await prisma.report.delete(whereMarkMember);
+  } else {
+    type === "likes"
+      ? await prisma.likes.create({ data })
+      : await prisma.report.create({ data });
+  }
+
+  console.log("🚀 expire tag:", `member-books-${bookOwner}`);
+  revalidateTag(`member-books-${bookOwner}`);
+};
+
+export const toggleFollowBook = async (book: number, bookOwner: number) => {
+  const { id } = await checkLogin();
+  const member = Number(id);
+  const fb = await prisma.followBook.findUnique({
+    where: { book_member: { book, member } },
+  });
+
+  if (fb)
+    await prisma.followBook.delete({
+      where: { book_member: { book, member } },
+    });
+  else
+    await prisma.followBook.create({
+      data: { book, member },
+    });
+
+  revalidateTag(`member-books-${bookOwner}`);
+  // revalidatePath(`/bookcase/${bookOwner}`);
 };

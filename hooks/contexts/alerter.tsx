@@ -18,13 +18,7 @@ import {
   OctagonXIcon,
   TriangleAlertIcon,
 } from "lucide-react";
-import {
-  createContext,
-  type PropsWithChildren,
-  use,
-  useRef,
-  useState,
-} from "react";
+import { createContext, type PropsWithChildren, use, useRef, useState } from "react";
 
 type AlertType = "confirm" | "alert" | "prompt";
 
@@ -40,7 +34,7 @@ type Options = {
 
 type ContextValueProps = {
   confirm: (options: Options) => Promise<string>;
-  alert: (options: Options) => Promise<string>;
+  alert: (options: Options | null, error?: unknown) => Promise<string>;
   prompt: (options: Options) => Promise<string>;
 };
 
@@ -56,7 +50,7 @@ export function AlerterProvider({ children }: PropsWithChildren) {
   const [resolver, setResolver] = useState<(value: string) => void>(() => {});
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // type        destructive     default
+  //   type     destructive       default
   // --------------------------------------------
   // confirm     Triangle        CircleAlert
   // alert       Octagon-X       CircleAlert
@@ -64,27 +58,33 @@ export function AlerterProvider({ children }: PropsWithChildren) {
   const variantIcon = () => {
     if (options?.type === "prompt") return <CircleQuestionMarkIcon />;
     if (options?.variant === "destructive")
-      return options?.type === "confirm" ? (
-        <TriangleAlertIcon />
-      ) : (
-        <OctagonXIcon />
-      );
+      return options?.type === "confirm" ? <TriangleAlertIcon /> : <OctagonXIcon />;
 
     return <CircleAlertIcon />;
   };
 
-  const setup = (options: Options, type: AlertType) =>
-    new Promise<string>((resolve) => {
+  const setup = (options: Options, type: AlertType) => {
+    console.log("🚀 setup options:", options);
+
+    return new Promise<string>((resolve) => {
       setOptions({ ...options, type });
       setResolver(() => resolve);
       setOpen(true);
     });
+  };
 
   // 먼저 close되고 0.1초 후 promise 실행하여 도시에 2개의 AlertDialog가 뜨는 걸 방지한다!
   const makeResolver = (value: string) => setTimeout(resolver, 100, value);
 
   const confirm = (options: Options) => setup(options, "confirm");
-  const alert = (options: Options) => setup(options, "alert");
+  const alert = (options: Options | null, error?: unknown) => {
+    return setup(
+      options
+        ? options
+        : { title: error instanceof Error ? error.message : JSON.stringify(error) },
+      "alert",
+    );
+  };
   const prompt = (options: Options) => setup(options, "prompt");
 
   return (
@@ -103,20 +103,12 @@ export function AlerterProvider({ children }: PropsWithChildren) {
               {options?.title}
             </AlertDialogTitle>
             {options?.description && (
-              <AlertDialogDescription>
-                {options.description}
-              </AlertDialogDescription>
+              <AlertDialogDescription>{options.description}</AlertDialogDescription>
             )}
           </AlertDialogHeader>
-
           {options?.type === "prompt" && (
-            <Input
-              type="text"
-              ref={inputRef}
-              placeholder={options?.placeholder}
-            />
+            <Input type="text" ref={inputRef} placeholder={options?.placeholder} />
           )}
-
           <AlertDialogFooter>
             {options?.type !== "alert" && (
               <AlertDialogCancel onClick={() => makeResolver("")}>
@@ -126,9 +118,7 @@ export function AlerterProvider({ children }: PropsWithChildren) {
             <AlertDialogAction
               onClick={() =>
                 makeResolver(
-                  options?.type === "prompt"
-                    ? (inputRef.current?.value ?? "")
-                    : "OK",
+                  options?.type === "prompt" ? (inputRef.current?.value ?? "") : "OK",
                 )
               }
               className={cn(
@@ -136,8 +126,7 @@ export function AlerterProvider({ children }: PropsWithChildren) {
                   "bg-destructive hover:bg-destructive/90 dark:bg-destructive/60",
               )}
             >
-              {options?.okText ??
-                (options?.type === "alert" ? "Confirm" : "Continue")}
+              {(options?.okText ?? options?.type === "alert") ? "Confirm" : "Continue"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

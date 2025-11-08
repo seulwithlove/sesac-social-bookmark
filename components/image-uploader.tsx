@@ -5,13 +5,7 @@ import { cn, DummyProfile } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import Image, { type StaticImageData } from "next/image";
 import { useRouter } from "next/navigation";
-import {
-  type ChangeEvent,
-  type FormEvent,
-  useRef,
-  useState,
-  useTransition,
-} from "react";
+import { type ChangeEvent, type FormEvent, useRef, useState, useTransition } from "react";
 
 type Props = {
   src: string | StaticImageData;
