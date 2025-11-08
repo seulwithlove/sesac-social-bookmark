@@ -84,7 +84,11 @@ export default function Mark({
   const likeMark = (e: MouseEvent<HTMLButtonElement>) => likeOrReportMark(e, "likes");
   const reportMark = (e: MouseEvent<HTMLButtonElement>) => likeOrReportMark(e, "reports");
 
-  const openLinkTrigger = async () => {
+  // MouseEventHandler<HTMLAnchorElement> | MouseEvent<HTMLButtonElement>
+  const openLinkTrigger = async (e?: MouseEvent) => {
+    if (e?.target && e?.target instanceof HTMLButtonElement) return;
+    console.log("***********>> openLinkTrigger!!!", e);
+
     // 좋아요 한 마크는 바로삭제에서 제외!
     if (!withdel || mark.Likes.length) return;
 
@@ -94,6 +98,7 @@ export default function Mark({
   const removeMark = async (e?: MouseEvent<HTMLButtonElement>) => {
     e?.preventDefault();
     e?.stopPropagation();
+    console.log("************** mark.removeMark>>", mark);
 
     if (!!followBooks || !!mark.Likes.length || !withdel) {
       const ret = await confirm({ title: "Are u sure??" });

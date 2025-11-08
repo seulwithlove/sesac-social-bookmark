@@ -1,7 +1,7 @@
 import ImageUploader from "@/components/image-uploader";
 import SignOutButton from "@/components/signout-button";
 import { auth } from "@/lib/auth";
-import DummyProfile from "@/public/profile-dummy.png";
+import DummyProfile from "@/public/profile_dummy.png";
 import { redirect } from "next/navigation";
 import { use } from "react";
 import { updateProfileImage } from "../sign/sign.action";
@@ -18,6 +18,7 @@ export default function My() {
   // };
 
   const { name, image } = session.user;
+
   return (
     <div className="container mx-auto grid h-full max-w-[700px] place-items-center">
       <div className="w-full rounded-md border p-5 text-center shadow-sm">

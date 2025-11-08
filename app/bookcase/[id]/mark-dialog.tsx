@@ -1,6 +1,6 @@
 "use client";
 
-import ImageUploader from "@/components/image-uploader";
+import ImageUploader, { type ImageUploaderHandler } from "@/components/image-uploader";
 import LabelInput from "@/components/label-input";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAlerter } from "@/hooks/contexts/alerter";
 import type { MarkData } from "@/lib/db";
 import type { ValidError } from "@/lib/validator";
+import { ZapIcon } from "lucide-react";
 import {
   useActionState,
   useRef,
@@ -32,7 +33,7 @@ import {
   type PropsWithChildren,
 } from "react";
 import { deleteMarkWithBookId, saveMark } from "./book.action";
-import { scrapOgs } from "./og.action";
+import { scrapOg } from "./og.action";
 
 export default function MarkDialog({
   mark = {
@@ -53,58 +54,77 @@ export default function MarkDialog({
   const [isOpen, setOpen] = useState(false);
   const linkRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
-  const desciptRef = useRef<HTMLTextAreaElement>(null);
+  const descriptRef = useRef<HTMLTextAreaElement>(null);
+  const imgUpRef = useRef<ImageUploaderHandler>(null);
 
   const [validError, save, isPending] = useActionState(
     async (_: ValidError | undefined, formData: FormData) => {
-      console.log("SAVE>>", formData);
+      console.log("SAVE>>", Object.fromEntries(formData.entries()));
       // formData.set('ispublic', ispublic ? 'on' : '');
 
       formData.set("id", String(mark.id));
+      formData.set("book", String(mark.book));
+      const img = imgUpRef.current?.getSrc();
+      if (img) formData.set("image", img);
+
       const err = await saveMark(formData);
       console.log("🚀 mark-dialog.err:", err);
       if (err) {
         return err;
       }
+
+      setOpen(false);
     },
     undefined,
   );
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const callSave = () => {
+    formRef.current?.requestSubmit();
+  };
+
   const remove = async () => {
     const ret = await confirm({ title: "Are u sure??" });
+    console.log("🚀 remove ** ret:", ret);
     if (!ret) return;
 
     try {
-      await deleteMarkWithBookId(mark.id, bookId);
-    } catch {
-      if (err) {
-        await alert(null, error);
-        return;
-      }
+      await deleteMarkWithBookId(mark.id, mark.book);
+    } catch (err) {
+      await alert(null, err);
+      setOpen(false);
+      return;
     }
     setOpen(false);
   };
 
-  const changeImage = (formData: FormData) => {};
+  const changeImage = (formData: FormData) => {
+    console.log("🚀 ~ formData:", formData);
+  };
 
   const click = (e: MouseEvent<HTMLButtonElement>) => {
-    e?.preventDefault();
-    e?.stopPropagation();
+    console.log("eeeeeeeee>>", e);
+    e.preventDefault();
+    e.stopPropagation();
     setOpen(true);
   };
 
   const scrap = async () => {
+    console.log("scrap>>>", linkRef.current?.value);
     if (!linkRef.current?.value) {
-      await alert({
-        title: "Input the Link",
-      });
+      await alert({ title: "Input the Link!" });
       return;
     }
-    if (!titleRef.current || !desciptRef.current) return;
 
-    const ogdata = await scrapOgs(linkRef.current.value);
-    if (ogdata.ogTitle) titleRef.current.value = ogdata.ogTitle;
-    if (ogdata.ogDescription) desciptRef.current.value = ogdata.ogDescription;
+    if (!titleRef.current || !descriptRef.current || !imgUpRef.current) return;
+
+    const { ogTitle, ogDescription, ogImage, favicon } = await scrapOg(
+      linkRef.current.value,
+    );
+
+    if (ogTitle) titleRef.current.value = ogTitle;
+    if (ogDescription) descriptRef.current.value = ogDescription;
+    if (ogImage?.length || favicon) imgUpRef.current.setSrc(ogImage?.[0]?.url || favicon);
   };
 
   return (
@@ -114,8 +134,8 @@ export default function MarkDialog({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{mark.id ? "Edit" : "Create"} Book</DialogTitle>
-          <DialogDescription>descript...</DialogDescription>
+          <DialogTitle>{mark.id ? "Edit" : "Create"} Mark</DialogTitle>
+          <DialogDescription>{mark.link}</DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-3 gap-2">
@@ -124,42 +144,47 @@ export default function MarkDialog({
               src={mark.image || `https://avatar.vercel.sh/${mark.title}`}
               alt={mark.title}
               changeImage={changeImage}
+              ref={imgUpRef}
             />
           </div>
 
-          <div className="mt-5 space-y-5">
-            <form action={save}>
-              <InputGroup>
-                <InputGroupInput
-                  ref={linkRef}
-                  defaultValue={mark.link}
-                  placeholder="Link(URL)..."
-                />
-                <InputGroupAddon align="inline-end">
-                  <InputGroupButton onClick={scrap} type="button" variant="secondary">
-                    Scrap
-                  </InputGroupButton>
-                </InputGroupAddon>
-              </InputGroup>
-              <LabelInput
-                label="title"
-                name="title"
-                ref={titleRef}
-                error={validError}
-                defaultValue={mark.title}
-              />
+          <div className="col-span-2 border p-3">
+            <form ref={formRef} action={save}>
+              <div className="mt-5 space-y-5">
+                <InputGroup>
+                  <InputGroupInput
+                    name={"link"}
+                    ref={linkRef}
+                    defaultValue={mark.link}
+                    placeholder="Link(URL)..."
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton onClick={scrap} type="button" variant="success">
+                      <ZapIcon />
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
 
-              <div className="flex flex-col">
-                <Label htmlFor="descript" className="font-semibold text-sm capitalize">
-                  Description
-                </Label>
-                <Textarea
-                  placeholder="description..."
-                  id="descript"
-                  name="descript"
-                  ref={desciptRef}
-                  defaultValue={mark.descript ?? ""}
+                <LabelInput
+                  label="title"
+                  name="title"
+                  ref={titleRef}
+                  error={validError}
+                  defaultValue={mark.title}
                 />
+
+                <div className="flex flex-col">
+                  <Label htmlFor="descript" className="font-semibold text-sm capitalize">
+                    Description
+                  </Label>
+                  <Textarea
+                    placeholder="description..."
+                    id="descript"
+                    name="descript"
+                    ref={descriptRef}
+                    defaultValue={mark.descript ?? ""}
+                  />
+                </div>
               </div>
             </form>
           </div>
@@ -176,7 +201,7 @@ export default function MarkDialog({
             </Button>
           )}
 
-          <Button type="submit" disabled={isPending}>
+          <Button onClick={callSave} disabled={isPending}>
             {mark.id ? "Save" : "Create"} Mark
           </Button>
         </DialogFooter>

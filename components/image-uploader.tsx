@@ -1,11 +1,23 @@
 "use client";
-
 import type { UpdateProfileImageReturn } from "@/app/sign/sign.action";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { type ChangeEvent, type FormEvent, useRef, useState, useTransition } from "react";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  type ForwardedRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import Img from "./ui/img";
+
+export type ImageUploaderHandler = {
+  setSrc: (src: string | Blob | undefined) => void;
+  getSrc: () => string | Blob | undefined;
+};
 
 type Props = {
   // src: string | StaticImageData;
@@ -14,9 +26,16 @@ type Props = {
   // changeImage?: (formData: FormData) => UpdateProfileImageReturn;
   changeImage?: (formData: FormData) => unknown;
   isNotProfile?: boolean;
+  ref: ForwardedRef<ImageUploaderHandler>;
 };
 
-export default function ImageUploader({ src, alt, changeImage, isNotProfile }: Props) {
+export default function ImageUploader({
+  src,
+  alt,
+  changeImage,
+  isNotProfile,
+  ref,
+}: Props) {
   const { update } = useSession();
   const router = useRouter();
 
@@ -25,6 +44,13 @@ export default function ImageUploader({ src, alt, changeImage, isNotProfile }: P
   const formRef = useRef<HTMLFormElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [errorMsgs, setErrorMsgs] = useState<string[]>([]);
+
+  const handler: ImageUploaderHandler = {
+    setSrc: (src: string | Blob | undefined) => setImg(src),
+    getSrc: () => img,
+    // setSrc: setImg,
+  };
+  useImperativeHandle(ref, () => handler);
 
   const setImageFile = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
@@ -46,7 +72,7 @@ export default function ImageUploader({ src, alt, changeImage, isNotProfile }: P
   const submitHandler = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-
+    // console.log('****>>', formData.get('image'));
     uploadImage(formData);
   };
 
@@ -54,9 +80,9 @@ export default function ImageUploader({ src, alt, changeImage, isNotProfile }: P
     setErrorMsgs([]);
     startTransition(async () => {
       // const ent = Object.fromEntries(formData.entries());
-      // console.log("💻 - image-uploader.tsx - ent:", ent);
-
+      // console.log('🚀 ~ ent:', ent);
       if (!changeImage) return;
+
       if (isNotProfile) {
         changeImage(formData);
       } else {
@@ -65,18 +91,20 @@ export default function ImageUploader({ src, alt, changeImage, isNotProfile }: P
         )) as Awaited<UpdateProfileImageReturn>;
 
         if (err) {
+          console.log("ERROR>>", err, typeof err.image);
           setImg(src);
-          if (typeof err.image === "object" && err.image?.errors.length)
+          if (typeof err.image === "object" && err.image?.errors)
             setErrorMsgs(err.image.errors);
           return;
         }
+
         await update(mbr);
       }
-      router.refresh(); // 이미지가 같이 바뀌어야하기때문에 : 꼭 필요할때만 사용!
+      router.refresh();
     });
   };
 
-  const DummyImage = `https://avatar.vercel.sh/${alt || ""}`;
+  const dummyImage = `https://avatar.vercel.sh/${alt || ""}`;
 
   return (
     <form onSubmit={submitHandler} ref={formRef} className="w-full">
@@ -109,8 +137,8 @@ export default function ImageUploader({ src, alt, changeImage, isNotProfile }: P
           src={img}
           alt={alt || ""}
           onClick={() => fileRef.current?.click()}
-          className="w-full rounded-full border object-fill"
-          onError={() => setImg(DummyImage)}
+          className="h-full w-full rounded-full border object-cover"
+          onError={() => setImg(dummyImage)}
         />
 
         <input
@@ -123,7 +151,7 @@ export default function ImageUploader({ src, alt, changeImage, isNotProfile }: P
           hidden
         />
       </div>
-      <div>
+      <div className="">
         {errorMsgs.map((emsg) => (
           <p key={emsg} className="text-red-500">
             {emsg}
